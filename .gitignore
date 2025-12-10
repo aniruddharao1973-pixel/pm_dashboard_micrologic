@@ -1,0 +1,19 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Logs
+logs/
+*.log
+
+# Env files
+.env
+backend/.env
+frontend/.env
+
+# Build Outputs
+frontend/dist
+backend/build
+
+# Uploads folder (optional)
+backend/uploads
