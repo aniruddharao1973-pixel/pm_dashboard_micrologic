@@ -1,0 +1,1669 @@
+// // src/pages/admin/CustomerProfile.jsx
+// import React, { useEffect, useState } from "react";
+// import { useParams, Link, useNavigate } from "react-router-dom";
+// import { useAdminApi } from "../../api/adminApi";
+
+// export default function CustomerProfile() {
+//   const { customerId } = useParams();
+//   const { getCustomer } = useAdminApi();
+//   const [data, setData] = useState({ customer: null, projects: [] });
+//   const [loading, setLoading] = useState(true);
+//   const navigate = useNavigate();
+
+//   useEffect(() => {
+//     (async () => {
+//       try {
+//         const res = await getCustomer(customerId);
+//         setData(res.data || { customer: null, projects: [] });
+//       } catch (err) {
+//         console.error("Load customer error", err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     })();
+//   }, [customerId]);
+
+//   if (loading) return <p className="p-6">Loading...</p>;
+//   if (!data.customer) return <p className="p-6">Customer not found.</p>;
+
+//   return (
+//     <div className="p-6">
+//       <div className="flex items-center justify-between mb-6">
+//         <div>
+//           <h1 className="text-2xl font-semibold">{data.customer.name}</h1>
+//           <p className="text-sm text-gray-600">{data.customer.email}</p>
+//         </div>
+//         <div className="flex gap-3">
+//           <button onClick={() => navigate(-1)} className="px-3 py-2 border rounded">Back</button>
+//           <Link to={`/admin/create-project?customerId=${data.customer.id}`} className="px-3 py-2 bg-indigo-600 text-white rounded">Create Project</Link>
+//         </div>
+//       </div>
+
+//       <section className="mb-6">
+//         <h2 className="text-lg font-semibold mb-3">Projects</h2>
+//         {data.projects.length === 0 ? (
+//           <p className="text-gray-500">No projects for this customer.</p>
+//         ) : (
+//           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//             {data.projects.map((p) => (
+//               <div key={p.id} className="bg-white p-4 rounded shadow">
+//                 <div className="flex justify-between items-start">
+//                   <div>
+//                     <h3 className="font-semibold">{p.name}</h3>
+//                     <p className="text-sm text-gray-500">Status: {p.status}</p>
+//                   </div>
+//                   <div className="text-sm text-gray-500">{new Date(p.created_at).toLocaleDateString()}</div>
+//                 </div>
+
+//                 <div className="mt-3 flex gap-2">
+//                   <Link to={`/projects/${p.id}/folders`} className="px-3 py-1 bg-blue-600 text-white rounded">Open</Link>
+//                   <Link to={`/projects/${p.id}/gantt`} className="px-3 py-1 bg-gray-100 rounded border">Gantt</Link>
+//                 </div>
+//               </div>
+//             ))}
+//           </div>
+//         )}
+//       </section>
+
+//       {/* Later: folders + files read-only view will appear here */}
+//     </div>
+//   );
+// }
+
+
+
+
+// // src/pages/admin/CustomerProfile.jsx
+// import React, { useEffect, useState } from "react";
+// import { useParams, Link, useNavigate } from "react-router-dom";
+// import { useAdminApi } from "../../api/adminApi";
+
+// export default function CustomerProfile() {
+//   const { customerId } = useParams();
+//   const { getCustomer } = useAdminApi();
+//   const [data, setData] = useState({ customer: null, projects: [] });
+//   const [loading, setLoading] = useState(true);
+//   const navigate = useNavigate();
+
+//   useEffect(() => {
+//     (async () => {
+//       try {
+//         const res = await getCustomer(customerId);
+//         setData(res.data || { customer: null, projects: [] });
+//       } catch (err) {
+//         console.error("Load customer error", err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     })();
+//   }, [customerId]);
+
+//   if (loading) {
+//     return (
+//       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="inline-block h-16 w-16 animate-spin rounded-full border-4 border-solid border-orange-500 border-r-transparent mb-4"></div>
+//           <p className="text-amber-700 font-semibold text-xl">Loading customer profile...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   if (!data.customer) {
+//     return (
+//       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center p-8">
+//         <div className="bg-gradient-to-br from-white to-amber-50 rounded-3xl shadow-xl border-2 border-red-300 p-12 text-center max-w-md">
+//           <div className="text-6xl mb-4">❌</div>
+//           <h2 className="text-2xl font-bold text-red-700 mb-2">Customer Not Found</h2>
+//           <p className="text-amber-600 mb-6">The customer you're looking for doesn't exist.</p>
+//           <button
+//             onClick={() => navigate(-1)}
+//             className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white font-bold rounded-2xl
+//                      shadow-lg hover:shadow-xl hover:shadow-orange-300
+//                      transform hover:scale-105 transition-all duration-300"
+//           >
+//             Go Back
+//           </button>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+// <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 p-8">
+//   <div className="max-w-7xl mx-auto">
+
+//         {/* Breadcrumb */}
+//     <p className="text-gray-600 text-sm mb-4">
+//       Projects &gt; <span className="font-semibold text-gray-800">{data.customer.name}</span>
+//     </p>
+
+    
+//     {/* Header Section */}
+//     <div className="bg-gradient-to-r from-white to-indigo-50 rounded-3xl shadow-2xl border border-indigo-200 p-8 mb-8
+//                     hover:shadow-indigo-300/40 transition-all duration-300">
+//       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        
+//         {/* Customer Info */}
+//         <div className="flex items-center gap-6">
+          
+//           {/* Avatar */}
+// <div className="w-20 h-20 rounded-full bg-gradient-to-br 
+//                 from-purple-600 via-indigo-500 to-blue-600
+//                 flex items-center justify-center text-white font-bold text-3xl
+//                 shadow-xl shadow-indigo-300
+//                 transform hover:scale-110 hover:rotate-6 transition-all duration-300">
+//   {data.customer.name.charAt(0).toUpperCase()}
+// </div>
+
+
+
+          
+//           {/* Name + Email */}
+//           <div>
+//             <h1 className="text-4xl font-extrabold bg-gradient-to-r 
+//                            from-purple-600 via-indigo-600 to-blue-600
+//                            bg-clip-text text-transparent mb-2">
+//               {data.customer.name}
+//             </h1>
+
+//             <div className="flex items-center gap-2">
+//               <span className="text-lg text-indigo-700 font-semibold">📧</span>
+//               <p className="text-lg text-indigo-700 font-medium">
+//                 {data.customer.email}
+//               </p>
+//             </div>
+//           </div>
+//         </div>
+
+        
+
+//         {/* Buttons */}
+// <div className="flex gap-4">
+
+//   {/* Create Project Button */}
+//   <button
+//     onClick={() => navigate(`/admin/create-project/${data.customer.id}`)}
+//     className="px-6 py-3 rounded-2xl font-bold text-white
+//                bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-600
+//                shadow-md hover:shadow-xl hover:shadow-indigo-300
+//                transform hover:scale-105 hover:-translate-y-1 transition-all duration-300
+//                flex items-center gap-2"
+//   >
+//     <span className="text-xl"></span> Create Project
+//   </button>
+
+//   {/* Back Button */}
+//   <button 
+//     onClick={() => navigate(-1)}
+//     className="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 font-bold rounded-2xl
+//                border border-gray-300 shadow-md hover:shadow-lg hover:shadow-gray-300
+//                transform hover:scale-105 hover:-translate-y-1 transition-all duration-300">
+//     ← Back
+//   </button>
+
+// </div>
+
+
+//       </div>
+//     </div>
+
+//     {/* Projects Section */}
+//     <section>
+//       <div className="flex items-center gap-3 mb-6">
+//         <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+//           Projects
+//         </h2>
+
+//         <span className="px-4 py-2 bg-gradient-to-r from-indigo-100 to-blue-100 text-indigo-800 font-bold rounded-full
+//                          border border-indigo-300 shadow-md">
+//           {data.projects.length}
+//         </span>
+//       </div>
+
+      
+
+//       {/* No Projects */}
+//       {data.projects.length === 0 ? (
+//         <div className="bg-gradient-to-br from-white to-indigo-50 rounded-3xl shadow-xl border border-indigo-200 p-12 text-center">
+//           <div className="text-6xl mb-4">📂</div>
+//           <p className="text-xl text-indigo-700 font-semibold mb-2">No projects yet</p>
+//           <p className="text-indigo-600 mb-6">Create your first project for this customer!</p>
+
+//           <Link 
+//             to={`/admin/create-project/${data.customer.id}`}
+//             className="inline-block px-6 py-3 bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-600 
+//                        text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:shadow-indigo-300
+//                        transform hover:scale-105 transition-all duration-300">
+//             Create First Project
+//           </Link>
+//         </div>
+//       ) : (
+        
+//         /* Projects Grid */
+//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+//   {data.projects.map((p) => (
+//   <div
+//     key={p.id}
+//     onClick={() => navigate(`/projects/${p.id}/folders`)}
+//     className="group cursor-pointer bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 hover:border-purple-400 hover:-translate-y-2"
+//   >
+//     {/* Top colored strip */}
+//     <div className={`h-2 bg-gradient-to-r from-purple-500 to-purple-600`}></div>
+
+//     <div className="p-6">
+//       {/* Icon + Status */}
+//       <div className="flex items-center justify-between mb-4">
+//         <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+//           <svg
+//             xmlns="http://www.w3.org/2000/svg"
+//             className="h-7 w-7 text-white"
+//             fill="none"
+//             viewBox="0 0 24 24"
+//             stroke="currentColor"
+//           >
+//             <path
+//               strokeLinecap="round"
+//               strokeLinejoin="round"
+//               strokeWidth={2}
+//               d="M3 7l9-4 9 4-9 4-9-4zm0 7l9 4 9-4"
+//             />
+//           </svg>
+//         </div>
+
+//         <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+//           Active
+//         </span>
+//       </div>
+
+//       {/* Name */}
+//       <h3 className="text-xl font-bold text-gray-800 group-hover:text-purple-600 transition-colors duration-300 mb-3">
+//         {p.name}
+//       </h3>
+
+//       {/* Divider */}
+//       <div className="h-px bg-gradient-to-r from-purple-200 via-blue-200 to-transparent mb-4"></div>
+
+//       {/* Customer */}
+//       <div className="flex items-center gap-2.5 text-sm">
+//         <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+//           <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//             <path
+//               strokeLinecap="round"
+//               strokeLinejoin="round"
+//               strokeWidth={2}
+//               d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+//             />
+//           </svg>
+//         </div>
+//         <div className="flex-1">
+//           <p className="text-xs text-gray-500 font-medium">Customer</p>
+//           <p className="text-gray-800 font-semibold">{data.customer.name}</p>
+//         </div>
+//       </div>
+
+//       {/* Created date */}
+//       <div className="flex items-center gap-2.5 text-sm mt-2">
+//         <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+//           <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//             <path
+//               strokeLinecap="round"
+//               strokeLinejoin="round"
+//               strokeWidth={2}
+//               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+//             />
+//           </svg>
+//         </div>
+//         <div className="flex-1">
+//           <p className="text-xs text-gray-500 font-medium">Created</p>
+//           <p className="text-gray-800 font-semibold">
+//             {new Date(p.created_at).toLocaleDateString()}
+//           </p>
+//         </div>
+//       </div>
+
+//       {/* Footer Action */}
+//       <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between text-sm">
+//         <span className="text-gray-600 font-medium group-hover:text-purple-600 transition-colors">
+//           Open
+//         </span>
+//         <svg
+//           className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all"
+//           fill="none"
+//           stroke="currentColor"
+//           viewBox="0 0 24 24"
+//         >
+//           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+//         </svg>
+//       </div>
+//     </div>
+//   </div>
+// ))}
+
+//         </div>
+//       )}
+
+//     </section>
+
+
+//   </div>
+// </div>
+
+//   );
+// }
+
+
+
+
+
+
+// // src/pages/admin/CustomerProfile.jsx
+// import React, { useEffect, useState } from "react";
+// import { useParams, Link, useNavigate } from "react-router-dom";
+// import { useAdminApi } from "../../api/adminApi";
+// import Swal from "sweetalert2";
+
+
+// export default function CustomerProfile() {
+//   const { companyId } = useParams();
+//   const { getCustomer } = useAdminApi();
+//   const { deleteProject } = useAdminApi();
+
+//   const [data, setData] = useState({
+//     company: null,
+//     users: [],
+//     projects: []
+//   });
+//   const [loading, setLoading] = useState(true);
+
+//   const navigate = useNavigate();
+
+//   // -------------------------------
+//   // FETCH COMPANY PROFILE
+//   // -------------------------------
+//   useEffect(() => {
+//     (async () => {
+//       try {
+//         console.log("Fetching company profile:", companyId);
+//         const res = await getCustomer(companyId);
+//         const companyData = res.data;
+
+//         // Admin = first user
+//         const adminUser = companyData.users[0] || null;
+
+//         // Collaborators = rest of users
+//         const collaborators = companyData.users.slice(1);
+
+//         setData({
+//           company: companyData.company,
+//           admin: adminUser,
+//           collaborators: collaborators,
+//           projects: companyData.projects,
+//         });
+
+
+//       } catch (err) {
+//         console.error("Load company profile error", err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     })();
+//   }, [companyId]);
+
+
+//   // -------------------------------
+// // DELETE COLLABORATOR HANDLER
+// // -------------------------------
+// const { deleteCollaborator } = useAdminApi();
+
+// const handleDeleteCollaborator = async (userId) => {
+//   Swal.fire({
+//     title: "Remove Collaborator?",
+//     text: "This will only remove this collaborator, not the entire company.",
+//     icon: "warning",
+//     showCancelButton: true,
+//     confirmButtonColor: "#dc2626",
+//     cancelButtonColor: "#6b7280",
+//     confirmButtonText: "Yes, Delete"
+//   }).then(async (result) => {
+//     if (!result.isConfirmed) return;
+
+//     try {
+//       console.log("🗑 Removing collaborator:", userId);
+//       await deleteCollaborator(userId);
+
+//       // Remove collaborator from UI
+//       setData((prev) => ({
+//         ...prev,
+//         collaborators: prev.collaborators.filter((u) => u.id !== userId)
+//       }));
+
+//       Swal.fire("Deleted!", "Collaborator removed successfully.", "success");
+
+//     } catch (err) {
+//       console.error("Delete collaborator error:", err);
+//       Swal.fire("Error", "Failed to delete collaborator", "error");
+//     }
+//   });
+// };
+
+
+// //------------------------------------------
+// // DELETE PROJECT HANDLER
+// //------------------------------------------
+
+//   const handleDeleteProject = async (projectId, name) => {
+//   const confirm = await Swal.fire({
+//     title: `Delete project "${name}"?`,
+//     text: "This action cannot be undone.",
+//     icon: "warning",
+//     showCancelButton: true,
+//     confirmButtonColor: "#dc2626",
+//     cancelButtonColor: "#6b7280",
+//     confirmButtonText: "Yes, delete"
+//   });
+
+//   if (!confirm.isConfirmed) return;
+
+//   try {
+//     await deleteProject(projectId);
+
+//     setData(prev => ({
+//       ...prev,
+//       projects: prev.projects.filter(p => p.id !== projectId)
+//     }));
+
+//     Swal.fire("Deleted!", "Project removed successfully.", "success");
+
+//   } catch (err) {
+//     Swal.fire("Error", "Failed to delete project.", "error");
+//   }
+// };
+
+//   // -------------------------------
+//   // LOADING UI
+//   // -------------------------------
+//   if (loading) {
+//     return (
+//       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="inline-block h-16 w-16 animate-spin rounded-full border-4 border-indigo-500 border-r-transparent mb-4"></div>
+//           <p className="text-indigo-700 font-semibold text-xl">Loading company profile...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   // -------------------------------
+//   // NOT FOUND UI
+//   // -------------------------------
+//   if (!data.company) {
+//     return (
+//       <div className="min-h-screen bg-gradient-to-br from-red-50 via-rose-50 to-red-100 flex items-center justify-center p-8">
+//         <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border-2 border-red-300 p-12 text-center max-w-md">
+//           <div className="text-6xl mb-4 text-red-600">❌</div>
+//           <h2 className="text-2xl font-bold text-red-700 mb-2">Company Not Found</h2>
+//           <p className="text-red-600 mb-6">The company you're trying to view doesn't exist.</p>
+//           <button
+//             onClick={() => navigate(-1)}
+//             className="px-6 py-3 bg-gradient-to-r from-rose-500 to-red-600 text-white font-bold rounded-2xl shadow-lg hover:scale-105 transition-all"
+//           >
+//             Go Back
+//           </button>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   const { company, admin, collaborators, projects } = data;
+
+//   return (
+//     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 p-8">
+//       <div className="max-w-7xl mx-auto">
+
+//         {/* Breadcrumb */}
+//         <p className="text-gray-600 text-sm mb-6">
+//           Customers &gt;{" "}
+//           <span className="font-semibold text-gray-800">{company.name}</span>
+//         </p>
+
+//         {/* ---------------------------------------------------------
+//            PREMIUM COMPANY BANNER
+//         --------------------------------------------------------- */}
+//         <div className="bg-white/90 backdrop-blur-2xl rounded-3xl shadow-2xl border border-indigo-200 p-10 mb-10">
+//           <div className="flex flex-col md:flex-row justify-between items-center gap-10">
+
+//             {/* LEFT SIDE: ICON + TEXT */}
+//             <div className="flex items-center gap-8">
+
+//               {/* Avatar Circle */}
+//               <div className="w-28 h-28 rounded-full bg-gradient-to-br 
+//                               from-purple-600 via-indigo-500 to-blue-600
+//                               flex items-center justify-center text-white 
+//                               font-extrabold text-5xl shadow-xl shadow-indigo-300
+//                               transform hover:scale-110 transition-all duration-300">
+//                 {company.name.charAt(0).toUpperCase()}
+//               </div>
+
+//               {/* Company Name + Emails */}
+//               <div>
+//                 <h1 className="text-5xl font-extrabold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent mb-4">
+//                   {company.name}
+//                 </h1>
+
+//                 {/* Emails */}
+//                 {/* Admin Email */}
+//                 <div className="flex items-center gap-2 mb-1">
+//                   <span className="text-xl">👤</span>
+//                   <p className="text-lg text-indigo-700 font-semibold">{admin.email}</p>
+//                 </div>
+
+//                 {/* Collaborators */}
+//                 {collaborators.map((u) => (
+//                   <div key={u.id} className="flex items-center gap-2 mb-1">
+//                     <span className="text-xl">📧</span>
+//                     <p className="text-lg text-indigo-700">{u.email}</p>
+//                   </div>
+//                 ))}
+
+
+//               </div>
+//             </div>
+
+//             {/* RIGHT SIDE: BUTTONS */}
+//             <div className="flex flex-col md:flex-row gap-4">
+
+//               {/* Create Project */}
+//               <button
+//                 onClick={() => navigate(`/admin/create-project/${company.id}`)}
+//                 className="px-8 py-4 rounded-2xl font-bold text-white text-lg
+//                            bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-600
+//                            shadow-lg hover:shadow-2xl hover:scale-105 transition-all">
+//                 ➕ Create Project
+//               </button>
+
+//               {/* Back */}
+//               <button
+//                 onClick={() => navigate(-1)}
+//                 className="px-8 py-4 bg-gradient-to-r from-gray-100 to-gray-200 
+//                           text-gray-700 font-bold rounded-2xl border border-gray-300 
+//                           shadow-md hover:shadow-xl hover:scale-105 transition-all">
+//                 ← Back
+//               </button>
+
+//             </div>
+//           </div>
+//         </div>
+
+
+// {/* ---------------------------------------------------------
+//   COLLABORATORS SECTION
+// --------------------------------------------------------- */}
+// <section className="mb-12">
+//   <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-6">
+//     Collaborators
+//   </h2>
+
+//   {collaborators.length === 0 ? (
+//     <p className="text-gray-500 italic">No collaborators yet.</p>
+//   ) : (
+//     <div className="space-y-4">
+//       {collaborators.map((u) => (
+//         <div
+//           key={u.id}
+//           className="flex items-center justify-between bg-gradient-to-r from-indigo-50 via-purple-50 to-blue-50 
+//                      p-5 rounded-2xl border border-indigo-200 shadow-sm hover:shadow-lg transition-all"
+//         >
+//           {/* Avatar + Info */}
+//           <div className="flex items-center gap-4">
+//             <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-600 via-indigo-500 to-blue-600
+//                             flex items-center justify-center text-white text-xl font-bold shadow-md">
+//               {u.name.charAt(0).toUpperCase()}
+//             </div>
+
+//             <div>
+//               <p className="text-lg font-semibold text-gray-800">{u.name}</p>
+//               <p className="text-gray-600">📧 {u.email}</p>
+//             </div>
+//           </div>
+
+//           {/* Right section — created date + delete */}
+//           <div className="flex items-center gap-4">
+
+//             {/* Created Date */}
+//             <div className="text-sm text-indigo-600 font-medium">
+//               {new Date(u.created_at).toLocaleString()}
+//             </div>
+
+//             {/* Delete Button */}
+//             <button
+//               onClick={() => handleDeleteCollaborator(u.id)}
+//               className="p-2 bg-red-500 text-white rounded-lg shadow 
+//                         hover:bg-red-700 hover:scale-105 transition"
+//               aria-label="Delete collaborator"
+//             >
+//               <svg 
+//                 xmlns="http://www.w3.org/2000/svg" 
+//                 width="20" 
+//                 height="20" 
+//                 viewBox="0 0 24 24" 
+//                 fill="currentColor"
+//               >
+//                 <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+//               </svg>
+//             </button>
+//           </div>
+//         </div>
+//       ))}
+//     </div>
+//   )}
+// </section>
+
+
+
+//         {/* ---------------------------------------------------------
+//            PROJECTS SECTION
+//         --------------------------------------------------------- */}
+//         <section>
+//           <div className="flex items-center gap-4 mb-6">
+//             <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+//               Projects
+//             </h2>
+//             <span className="px-4 py-2 bg-indigo-100 text-indigo-800 rounded-full font-bold shadow">
+//               {projects.length}
+//             </span>
+//           </div>
+
+//           {projects.length === 0 ? (
+//             <div className="bg-white/80 backdrop-blur-xl border border-indigo-200 rounded-3xl p-12 text-center shadow-xl">
+//               <div className="text-6xl mb-4">📂</div>
+//               <p className="text-xl text-indigo-700 font-semibold">No projects yet</p>
+//               <p className="text-indigo-600 mb-6">Create your first project for this company!</p>
+
+//               <Link
+//                 to={`/admin/create-project/${company.id}`}
+//                 className="px-6 py-3 bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-600 text-white font-bold rounded-2xl shadow-lg hover:scale-105 transition-all">
+//                 Create First Project
+//               </Link>
+//             </div>
+//           ) : (
+//             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+//               {projects.map(project => (
+//                 <div
+//                   key={project.id}
+//                   onClick={() => navigate(`/projects/${project.id}/folders`)}
+//                   className="group cursor-pointer bg-white rounded-2xl shadow-md hover:shadow-xl transition-all p-6 border border-gray-200 hover:border-purple-400 hover:-translate-y-2">
+
+
+// {/* Icon + Right Actions */}
+// <div className="flex items-center justify-between mb-4">
+
+//   {/* LEFT — ICON */}
+//   <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 
+//                   flex items-center justify-center text-white shadow-lg">
+//     📁
+//   </div>
+
+//   {/* RIGHT — ACTIVE + DELETE */}
+//   <div className="flex items-center gap-3">
+
+//     {/* Active Badge */}
+//     <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+//       Active
+//     </span>
+
+//     {/* DELETE BUTTON */}
+//     <button
+//       onClick={(e) => {
+//         e.stopPropagation();
+//         handleDeleteProject(project.id, project.name);
+//       }}
+//       title="Delete Project"
+//       className="
+//         group relative flex items-center justify-center
+//         w-9 h-9 rounded-xl
+//         backdrop-blur-md bg-red-50/60 
+//         border border-red-200/70 shadow-md
+//         hover:bg-red-100 hover:shadow-lg 
+//         hover:-translate-y-0.5 
+//         transition-all duration-200
+//       "
+//     >
+
+
+// <svg 
+//   xmlns="http://www.w3.org/2000/svg" 
+//   width="24" 
+//   height="24" 
+//   viewBox="0 0 24 24" 
+//   fill="#ef4444"
+// >
+//   <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+// </svg>
+
+
+//       {/* Glow hover effect */}
+//       <div
+//         className="
+//           absolute inset-0 rounded-xl 
+//           bg-red-400/20 opacity-0 
+//           group-hover:opacity-40 blur-md 
+//           transition
+//         "
+//       ></div>
+//     </button>
+
+//   </div>
+// </div>
+
+// {/* Project Name */}
+// <h3 className="text-xl font-bold text-gray-800 group-hover:text-purple-600 transition-colors">
+//   {project.name}
+// </h3>
+
+// {/* Created Date */}
+// <p className="text-sm text-gray-500 mt-2">
+//   Created: {new Date(project.created_at).toLocaleDateString()}
+// </p>
+
+// {/* Footer */}
+// <div className="mt-5 flex items-center justify-between pt-4 border-t border-gray-100 text-sm">
+//   <span className="text-gray-600 group-hover:text-purple-600">Open</span>
+//   <span className="text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all">→</span>
+// </div>
+
+
+//                   <h3 className="text-xl font-bold text-gray-800 group-hover:text-purple-600 transition-colors">
+//                     {project.name}
+//                   </h3>
+
+//                   <p className="text-sm text-gray-500 mt-2">
+//                     Created: {new Date(project.created_at).toLocaleDateString()}
+//                   </p>
+
+//                   <div className="mt-5 flex items-center justify-between pt-4 border-t border-gray-100 text-sm">
+//                     <span className="text-gray-600 group-hover:text-purple-600">Open</span>
+//                     <span className="text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all">→</span>
+//                   </div>
+//                 </div>
+//               ))}
+
+//             </div>
+//           )}
+//         </section>
+
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+// // src/pages/admin/CustomerProfile.jsx
+// import React, { useEffect, useState } from "react";
+// import { useParams, Link, useNavigate } from "react-router-dom";
+// import { useAdminApi } from "../../api/adminApi";
+// import Swal from "sweetalert2";
+
+
+// export default function CustomerProfile() {
+//   const { companyId } = useParams();
+//   const { getCustomer } = useAdminApi();
+//   const { deleteProject } = useAdminApi();
+
+//   const [data, setData] = useState({
+//     company: null,
+//     users: [],
+//     projects: []
+//   });
+//   const [loading, setLoading] = useState(true);
+
+//   const navigate = useNavigate();
+
+//   // -------------------------------
+//   // FETCH COMPANY PROFILE
+//   // -------------------------------
+//   useEffect(() => {
+//     (async () => {
+//       try {
+//         console.log("Fetching company profile:", companyId);
+//         const res = await getCustomer(companyId);
+//         const companyData = res.data;
+
+//         // Admin = first user
+//         const adminUser = companyData.users[0] || null;
+
+//         // Collaborators = rest of users
+//         const collaborators = companyData.users.slice(1);
+
+//         setData({
+//           company: companyData.company,
+//           admin: adminUser,
+//           collaborators: collaborators,
+//           projects: companyData.projects,
+//         });
+
+
+//       } catch (err) {
+//         console.error("Load company profile error", err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     })();
+//   }, [companyId]);
+
+
+//   // -------------------------------
+// // DELETE COLLABORATOR HANDLER
+// // -------------------------------
+// const { deleteCollaborator } = useAdminApi();
+
+// const handleDeleteCollaborator = async (userId) => {
+//   Swal.fire({
+//     title: "Remove Collaborator?",
+//     text: "This will only remove this collaborator, not the entire company.",
+//     icon: "warning",
+//     showCancelButton: true,
+//     confirmButtonColor: "#dc2626",
+//     cancelButtonColor: "#6b7280",
+//     confirmButtonText: "Yes, Delete"
+//   }).then(async (result) => {
+//     if (!result.isConfirmed) return;
+
+//     try {
+//       console.log("🗑 Removing collaborator:", userId);
+//       await deleteCollaborator(userId);
+
+//       // Remove collaborator from UI
+//       setData((prev) => ({
+//         ...prev,
+//         collaborators: prev.collaborators.filter((u) => u.id !== userId)
+//       }));
+
+//       Swal.fire("Deleted!", "Collaborator removed successfully.", "success");
+
+//     } catch (err) {
+//       console.error("Delete collaborator error:", err);
+//       Swal.fire("Error", "Failed to delete collaborator", "error");
+//     }
+//   });
+// };
+
+
+// //------------------------------------------
+// // DELETE PROJECT HANDLER
+// //------------------------------------------
+
+//   const handleDeleteProject = async (projectId, name) => {
+//   const confirm = await Swal.fire({
+//     title: `Delete project "${name}"?`,
+//     text: "This action cannot be undone.",
+//     icon: "warning",
+//     showCancelButton: true,
+//     confirmButtonColor: "#dc2626",
+//     cancelButtonColor: "#6b7280",
+//     confirmButtonText: "Yes, delete"
+//   });
+
+//   if (!confirm.isConfirmed) return;
+
+//   try {
+//     await deleteProject(projectId);
+
+//     setData(prev => ({
+//       ...prev,
+//       projects: prev.projects.filter(p => p.id !== projectId)
+//     }));
+
+//     Swal.fire("Deleted!", "Project removed successfully.", "success");
+
+//   } catch (err) {
+//     Swal.fire("Error", "Failed to delete project.", "error");
+//   }
+// };
+
+//   // -------------------------------
+//   // LOADING UI
+//   // -------------------------------
+//   if (loading) {
+//     return (
+//       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 flex items-center justify-center">
+//         <div className="text-center">
+//           <div className="inline-block h-16 w-16 animate-spin rounded-full border-4 border-indigo-500 border-r-transparent mb-4"></div>
+//           <p className="text-indigo-700 font-semibold text-xl">Loading company profile...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   // -------------------------------
+//   // NOT FOUND UI
+//   // -------------------------------
+//   if (!data.company) {
+//     return (
+//       <div className="min-h-screen bg-gradient-to-br from-red-50 via-rose-50 to-red-100 flex items-center justify-center p-8">
+//         <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-red-200 p-12 text-center max-w-md">
+//           <div className="text-6xl mb-4 text-red-600">❌</div>
+//           <h2 className="text-2xl font-bold text-red-700 mb-2">Company Not Found</h2>
+//           <p className="text-red-600 mb-6">The company you're trying to view doesn't exist.</p>
+//           <button
+//             onClick={() => navigate(-1)}
+//             className="px-6 py-3 bg-gradient-to-r from-rose-500 to-red-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+//           >
+//             Go Back
+//           </button>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   const { company, admin, collaborators, projects } = data;
+
+//   return (
+//     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 p-8">
+//       <div className="max-w-7xl mx-auto">
+
+//         {/* Breadcrumb */}
+//         <nav className="mb-6">
+//           <p className="text-sm text-gray-600 font-medium">
+//             Customers <span className="text-gray-400 mx-2">›</span>
+//             <span className="text-gray-900 font-semibold">{company.name}</span>
+//           </p>
+//         </nav>
+
+//         {/* ---------------------------------------------------------
+//            PREMIUM COMPANY BANNER
+//         --------------------------------------------------------- */}
+//         <div className="bg-white rounded-3xl shadow-xl border border-gray-200 p-10 mb-10 hover:shadow-2xl transition-shadow duration-300">
+//           <div className="flex flex-col md:flex-row justify-between items-center gap-10">
+
+//             {/* LEFT SIDE: ICON + TEXT */}
+//             <div className="flex items-center gap-6">
+
+//               {/* Avatar Circle */}
+//               <div className="w-24 h-24 rounded-2xl bg-gradient-to-br 
+//                               from-purple-600 via-indigo-500 to-blue-600
+//                               flex items-center justify-center text-white 
+//                               font-bold text-4xl shadow-lg
+//                               transform hover:scale-105 transition-transform duration-300">
+//                 {company.name.charAt(0).toUpperCase()}
+//               </div>
+
+//               {/* Company Name + Emails */}
+//               <div>
+//                 <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent mb-4">
+//                   {company.name}
+//                 </h1>
+
+//                 {/* Emails */}
+//                 <div className="space-y-2">
+//                   {/* Admin Email */}
+//                   <div className="flex items-center gap-2.5">
+//                     <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
+//                       <span className="text-white text-xs">👤</span>
+//                     </div>
+//                     <p className="text-base text-gray-700 font-medium">{admin.email}</p>
+//                   </div>
+
+//                   {/* Collaborators */}
+//                   {collaborators.map((u) => (
+//                     <div key={u.id} className="flex items-center gap-2.5">
+//                       <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-400 to-indigo-400 flex items-center justify-center">
+//                         <span className="text-white text-xs">📧</span>
+//                       </div>
+//                       <p className="text-base text-gray-600">{u.email}</p>
+//                     </div>
+//                   ))}
+//                 </div>
+//               </div>
+//             </div>
+
+//             {/* RIGHT SIDE: BUTTONS */}
+//             <div className="flex flex-col md:flex-row gap-3">
+
+//               {/* Create Project */}
+//               <button
+//                 onClick={() => navigate(`/admin/create-project/${company.id}`)}
+//                 className="px-6 py-3 rounded-xl font-semibold text-white
+//                            bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-600
+//                            shadow-md hover:shadow-xl hover:scale-105 transition-all duration-200
+//                            flex items-center gap-2 justify-center">
+//                 <span className="text-lg">➕</span>
+//                 Create Project
+//               </button>
+
+//               {/* Back */}
+//               <button
+//                 onClick={() => navigate(-1)}
+//                 className="px-6 py-3 bg-white text-gray-700 font-semibold rounded-xl 
+//                           border border-gray-300 shadow-sm hover:shadow-md 
+//                           hover:border-gray-400 hover:scale-105 transition-all duration-200
+//                           flex items-center gap-2 justify-center">
+//                 <span>←</span>
+//                 Back
+//               </button>
+
+//             </div>
+//           </div>
+//         </div>
+
+
+// {/* ---------------------------------------------------------
+//   COLLABORATORS SECTION
+// --------------------------------------------------------- */}
+// <section className="mb-12">
+//   <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-6">
+//     Collaborators
+//   </h2>
+
+//   {collaborators.length === 0 ? (
+//     <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center shadow-sm">
+//       <p className="text-gray-500 italic">No collaborators yet.</p>
+//     </div>
+//   ) : (
+//     <div className="space-y-3">
+//       {collaborators.map((u) => (
+//         <div
+//           key={u.id}
+//           className="flex items-center justify-between bg-white
+//                      p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md 
+//                      hover:border-indigo-300 transition-all duration-200"
+//         >
+//           {/* Avatar + Info */}
+//           <div className="flex items-center gap-4">
+//             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 via-indigo-500 to-blue-600
+//                             flex items-center justify-center text-white text-lg font-semibold shadow-md">
+//               {u.name.charAt(0).toUpperCase()}
+//             </div>
+
+//             <div>
+//               <p className="text-base font-semibold text-gray-900">{u.name}</p>
+//               <p className="text-sm text-gray-600 flex items-center gap-1.5">
+//                 <span>📧</span>
+//                 {u.email}
+//               </p>
+//             </div>
+//           </div>
+
+//           {/* Right section — created date + delete */}
+//           <div className="flex items-center gap-4">
+
+//             {/* Created Date */}
+//             <div className="text-sm text-gray-500 font-medium hidden sm:block">
+//               {new Date(u.created_at).toLocaleDateString('en-US', { 
+//                 month: 'short', 
+//                 day: 'numeric', 
+//                 year: 'numeric',
+//                 hour: '2-digit',
+//                 minute: '2-digit'
+//               })}
+//             </div>
+
+//             {/* Delete Button */}
+//             <button
+//               onClick={() => handleDeleteCollaborator(u.id)}
+//               className="w-9 h-9 flex items-center justify-center
+//                         bg-red-50 hover:bg-red-100 
+//                         border border-red-200 hover:border-red-300
+//                         rounded-lg shadow-sm hover:shadow-md 
+//                         transition-all duration-200
+//                         group"
+//               aria-label="Delete collaborator"
+//             >
+//               <svg 
+//                 xmlns="http://www.w3.org/2000/svg" 
+//                 width="18" 
+//                 height="18" 
+//                 viewBox="0 0 24 24" 
+//                 fill="#ef4444"
+//                 className="group-hover:scale-110 transition-transform"
+//               >
+//                 <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+//               </svg>
+//             </button>
+//           </div>
+//         </div>
+//       ))}
+//     </div>
+//   )}
+// </section>
+
+
+
+//         {/* ---------------------------------------------------------
+//            PROJECTS SECTION
+//         --------------------------------------------------------- */}
+//         <section>
+//           <div className="flex items-center gap-3 mb-6">
+//             <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+//               Projects
+//             </h2>
+//             <span className="px-3 py-1 bg-gradient-to-r from-indigo-100 to-purple-100 
+//                            text-indigo-800 rounded-full text-sm font-bold shadow-sm">
+//               {projects.length}
+//             </span>
+//           </div>
+
+//           {projects.length === 0 ? (
+//             <div className="bg-white rounded-3xl border border-gray-200 p-16 text-center shadow-lg">
+//               <div className="text-6xl mb-4">📂</div>
+//               <p className="text-xl text-gray-800 font-semibold mb-2">No projects yet</p>
+//               <p className="text-gray-600 mb-6">Create your first project for this company!</p>
+
+//               <Link
+//                 to={`/admin/create-project/${company.id}`}
+//                 className="inline-block px-6 py-3 bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-600 
+//                          text-white font-semibold rounded-xl shadow-md hover:shadow-xl hover:scale-105 transition-all duration-200">
+//                 Create First Project
+//               </Link>
+//             </div>
+//           ) : (
+//             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+//               {projects.map(project => (
+//                 <div
+//                   key={project.id}
+//                   onClick={() => navigate(`/projects/${project.id}/folders`)}
+//                   className="group cursor-pointer bg-white rounded-2xl shadow-md hover:shadow-xl 
+//                            transition-all duration-300 p-6 border border-gray-200 
+//                            hover:border-indigo-300 hover:-translate-y-1">
+
+
+// {/* Icon + Right Actions */}
+// <div className="flex items-center justify-between mb-5">
+
+//   {/* LEFT — ICON */}
+//   <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-purple-500 via-indigo-500 to-blue-600 
+//                   flex items-center justify-center text-2xl shadow-md group-hover:shadow-lg
+//                   transition-shadow duration-300">
+//     📁
+//   </div>
+
+//   {/* RIGHT — ACTIVE + DELETE */}
+//   <div className="flex items-center gap-2.5">
+
+//     {/* Active Badge */}
+//     <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-semibold 
+//                    rounded-full border border-green-200">
+//       Active
+//     </span>
+
+//     {/* DELETE BUTTON */}
+//     <button
+//       onClick={(e) => {
+//         e.stopPropagation();
+//         handleDeleteProject(project.id, project.name);
+//       }}
+//       title="Delete Project"
+//       className="w-8 h-8 flex items-center justify-center rounded-lg
+//                 bg-red-50 hover:bg-red-100 
+//                 border border-red-200 hover:border-red-300
+//                 shadow-sm hover:shadow-md 
+//                 hover:-translate-y-0.5 
+//                 transition-all duration-200
+//                 group/delete"
+//     >
+//       <svg 
+//         xmlns="http://www.w3.org/2000/svg" 
+//         width="16" 
+//         height="16" 
+//         viewBox="0 0 24 24" 
+//         fill="#ef4444"
+//         className="group-hover/delete:scale-110 transition-transform"
+//       >
+//         <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+//       </svg>
+//     </button>
+
+//   </div>
+// </div>
+
+// {/* Project Name */}
+// <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 
+//              transition-colors duration-200 mb-2">
+//   {project.name}
+// </h3>
+
+// {/* Created Date */}
+// <p className="text-sm text-gray-500 font-medium">
+//   Created: {new Date(project.created_at).toLocaleDateString('en-US', { 
+//     month: 'short', 
+//     day: 'numeric', 
+//     year: 'numeric' 
+//   })}
+// </p>
+
+// {/* Footer */}
+// <div className="mt-5 flex items-center justify-between pt-4 border-t border-gray-100">
+//   <span className="text-sm font-medium text-gray-600 group-hover:text-indigo-600 
+//                  transition-colors">Open Project</span>
+//   <span className="text-gray-400 group-hover:text-indigo-600 group-hover:translate-x-1 
+//                  transition-all duration-200">→</span>
+// </div>
+
+//                 </div>
+//               ))}
+
+//             </div>
+//           )}
+//         </section>
+
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+// src/pages/admin/CustomerProfile.jsx
+import React, { useEffect, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useAdminApi } from "../../api/adminApi";
+import Swal from "sweetalert2";
+
+export default function CustomerProfile() {
+  const { companyId } = useParams();
+  const { getCustomer } = useAdminApi();
+  const { deleteProject } = useAdminApi();
+
+  const [data, setData] = useState({
+    company: null,
+    users: [],
+    projects: []
+  });
+  const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
+
+  // -------------------------------
+  // FETCH COMPANY PROFILE
+  // -------------------------------
+  useEffect(() => {
+    (async () => {
+      try {
+        console.log("Fetching company profile:", companyId);
+        const res = await getCustomer(companyId);
+        const companyData = res.data;
+
+        // Admin = first user
+        const adminUser = companyData.users[0] || null;
+
+        // Collaborators = rest of users
+        const collaborators = companyData.users.slice(1);
+
+        setData({
+          company: companyData.company,
+          admin: adminUser,
+          collaborators: collaborators,
+          projects: companyData.projects,
+        });
+      } catch (err) {
+        console.error("Load company profile error", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [companyId]);
+
+  // -------------------------------
+  // DELETE COLLABORATOR HANDLER
+  // -------------------------------
+  const { deleteCollaborator } = useAdminApi();
+
+  const handleDeleteCollaborator = async (userId) => {
+    Swal.fire({
+      title: "Remove Collaborator?",
+      text: "This will only remove this collaborator, not the entire company.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, Delete"
+    }).then(async (result) => {
+      if (!result.isConfirmed) return;
+
+      try {
+        console.log("🗑 Removing collaborator:", userId);
+        await deleteCollaborator(userId);
+
+        // Remove collaborator from UI
+        setData((prev) => ({
+          ...prev,
+          collaborators: prev.collaborators.filter((u) => u.id !== userId)
+        }));
+
+        Swal.fire("Deleted!", "Collaborator removed successfully.", "success");
+      } catch (err) {
+        console.error("Delete collaborator error:", err);
+        Swal.fire("Error", "Failed to delete collaborator", "error");
+      }
+    });
+  };
+
+  //------------------------------------------
+  // DELETE PROJECT HANDLER
+  //------------------------------------------
+
+  const handleDeleteProject = async (projectId, name) => {
+    const confirm = await Swal.fire({
+      title: `Delete project "${name}"?`,
+      text: "This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete"
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      await deleteProject(projectId);
+
+      setData(prev => ({
+        ...prev,
+        projects: prev.projects.filter(p => p.id !== projectId)
+      }));
+
+      Swal.fire("Deleted!", "Project removed successfully.", "success");
+    } catch (err) {
+      Swal.fire("Error", "Failed to delete project.", "error");
+    }
+  };
+
+  // -------------------------------
+  // LOADING UI
+  // -------------------------------
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 via-gray-100 to-gray-50 flex items-center justify-center p-6">
+        <div className="text-center">
+          <div className="inline-block h-16 w-16 animate-spin rounded-full border-4 border-indigo-500 border-r-transparent mb-4"></div>
+          <p className="text-indigo-700 font-semibold text-xl">Loading company profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // -------------------------------
+  // NOT FOUND UI
+  // -------------------------------
+  if (!data.company) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-rose-50 to-red-100 flex items-center justify-center p-8">
+        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-red-200 p-12 text-center max-w-md">
+          <div className="text-6xl mb-4 text-red-600">❌</div>
+          <h2 className="text-2xl font-bold text-red-700 mb-2">Company Not Found</h2>
+          <p className="text-red-600 mb-6">The company you're trying to view doesn't exist.</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="px-6 py-3 bg-gradient-to-r from-rose-500 to-red-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const { company, admin, collaborators, projects } = data;
+
+  return (
+    // <div className="min-h-screen bg-gradient-to-b from-gray-50 via-gray-100 to-white p-8">
+
+    <div
+      className="
+        w-full
+        h-[calc(100vh-80px)]
+        overflow-y-scroll
+        scroll-smooth
+        bg-gradient-to-b from-gray-50 via-gray-100 to-white
+        p-6 md:p-8
+      "
+      style={{
+        scrollbarWidth: "thin",
+        scrollbarColor: "#cbd5e1 #f1f5f9",
+      }}
+    >
+
+
+
+      <div className="max-w-7xl mx-auto">
+
+        {/* Breadcrumb */}
+        <nav className="mb-6">
+          <p className="text-sm text-gray-600 font-medium">
+            Customers <span className="text-gray-400 mx-2">›</span>
+            <span className="text-gray-900 font-semibold">{company.name}</span>
+          </p>
+        </nav>
+
+        {/* Hero / Top Card */}
+        <header className="mb-10">
+          <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-white to-white/60 shadow-xl border border-gray-200">
+            {/* subtle decorative stripe */}
+            <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-purple-600 via-indigo-500 to-blue-600"></div>
+
+            <div className="p-8 md:p-10 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              {/* avatar + text */}
+              <div className="flex items-center gap-6 md:col-span-2">
+                <div className="flex-shrink-0">
+                  <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-500 to-blue-600
+                                  flex items-center justify-center text-white font-extrabold text-4xl shadow-lg">
+                    {company.name.charAt(0).toUpperCase()}
+                  </div>
+                </div>
+
+                <div>
+                  <h1 className="text-4xl font-extrabold leading-tight text-gray-900">{company.name}</h1>
+                  {/* <p className="mt-1 text-sm text-gray-500 max-w-2xl">
+                    Professional overview of this customer's collaborators and projects. Clean, focused and easy to act on.
+                  </p> */}
+
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    {admin && (
+                      <div className="inline-flex items-center gap-3 px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg shadow-sm">
+                        <div className="w-8 h-8 rounded-md bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white">
+                          👤
+                        </div>
+                        <div className="text-sm">
+                          <div className="font-semibold text-gray-900">{admin.email}</div>
+                          <div className="text-xs text-gray-500">Admin</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {collaborators && collaborators.slice(0, 4).map(c => (
+                      <div key={c.id} className="inline-flex items-center gap-3 px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg shadow-sm">
+                        <div className="w-8 h-8 rounded-md bg-gradient-to-br from-blue-400 to-indigo-400 flex items-center justify-center text-white text-xs">
+                          📧
+                        </div>
+                        <div className="text-sm">
+                          <div className="font-semibold text-gray-800 truncate max-w-[200px]">{c.email}</div>
+                          <div className="text-xs text-gray-500">Collaborator</div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {collaborators && collaborators.length > 4 && (
+                      <div className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg shadow-sm">
+                        <span className="text-sm text-gray-600">+{collaborators.length - 4} more</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* actions */}
+              <div className="flex items-center justify-start md:justify-end gap-3 mt-4 md:mt-0">
+                <button
+                  onClick={() => navigate(`/admin/create-project/${company.id}`)}
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-white font-semibold
+                             bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-600 shadow-md hover:shadow-xl transition-transform transform hover:-translate-y-0.5"
+                >
+                  <span className="text-lg">✛</span> Create Project
+
+
+                </button>
+
+                <button
+                  onClick={() => navigate(-1)}
+                  className="inline-flex items-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md"
+                >
+                  ← Back
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Main grid: Collaborators (left) / Projects (right) */}
+        <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+          {/* Collaborators list */}
+          <aside className="lg:col-span-1">
+            <div className="flex items-center gap-3 mb-5">
+              <h2 className="text-2xl font-bold text-gray-900">Collaborators</h2>
+              <span className="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full">
+                {collaborators.length}
+              </span>
+            </div>
+
+
+            <div className="space-y-4">
+              {collaborators.length === 0 ? (
+                <div className="rounded-2xl bg-white p-6 border border-gray-200 shadow-sm text-center">
+                  <div className="text-lg text-gray-700">No collaborators yet</div>
+                  <p className="text-sm text-gray-600 mt-2">Invite people to collaborate on projects.</p>
+                </div>
+              ) : (
+                collaborators.map(u => (
+                  <div
+                    key={u.id}
+                    className="flex items-center justify-between gap-4 bg-white rounded-xl py-8 px-2  border border-gray-200 shadow-sm hover:shadow-md transition"
+
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-600 via-indigo-500 to-blue-600 flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
+                        {u.name ? u.name.charAt(0).toUpperCase() : "U"}
+                      </div>
+
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-gray-900 truncate">{u.name || "Unknown"}</div>
+                        <div className="text-xs text-gray-500 flex items-center gap-2 truncate">
+                          <span>📧</span>
+                          <span className="truncate">{u.email}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="text-xs text-gray-500 hidden sm:block">
+                        {new Date(u.created_at).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </div>
+
+                      <button
+                        onClick={() => handleDeleteCollaborator(u.id)}
+                        className="p-2 rounded-lg bg-red-50 border border-red-100 hover:bg-red-100 hover:border-red-200 transition"
+                        aria-label="Delete collaborator"
+                        title="Remove collaborator"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#ef4444">
+                          <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </aside>
+
+          {/* Projects area */}
+          <section className="lg:col-span-2">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-bold text-gray-900">Projects</h2>
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-sm font-semibold shadow-sm">
+                  {projects.length}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {/* <Link
+                  to={`/admin/create-project/${company.id}`}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md"
+                >
+                  Create New
+                </Link> */}
+              </div>
+            </div>
+
+            {projects.length === 0 ? (
+              <div className="rounded-3xl bg-white p-12 border border-gray-200 shadow-lg text-center">
+                <div className="text-6xl mb-4">📂</div>
+                <div className="text-xl font-semibold text-gray-800 mb-2">No projects yet</div>
+                <p className="text-gray-500 mb-6">Create the first project to get started.</p>
+                <Link
+                  to={`/admin/create-project/${company.id}`}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-600 text-white rounded-xl shadow-md hover:shadow-xl"
+                >
+                  Create First Project
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {projects.map(project => (
+                  <article
+                    key={project.id}
+                    onClick={() => navigate(`/projects/${project.id}/folders`)}
+                    className="group cursor-pointer relative bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-lg transition transform hover:-translate-y-1"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-purple-500 via-indigo-500 to-blue-600 flex items-center justify-center text-2xl shadow-md">
+                          📁
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition">{project.name}</h3>
+                          <p className="text-xs text-gray-500 mt-1">Created {new Date(project.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <span className="px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-semibold border border-green-100">Active</span>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteProject(project.id, project.name);
+                          }}
+                          title="Delete Project"
+                          className="p-2 rounded-lg bg-red-50 border border-red-100 hover:bg-red-100 transition"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#ef4444">
+                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-4">
+                      <span className="text-sm text-gray-600 group-hover:text-indigo-600 transition">Open Project</span>
+                      <span className="text-gray-300 group-hover:text-indigo-600 group-hover:translate-x-1 transition">→</span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        </main>
+      </div>
+    </div>
+  );
+}

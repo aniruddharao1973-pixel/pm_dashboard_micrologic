@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;      /* Firefox */
+}
+
+
+/* Custom scrollbar that appears only during scroll */
+.scroll-appear {
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 transparent;
+  transition: scrollbar-color 0.3s ease-in-out;
+}
+
+.scroll-appear::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scroll-appear::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0); /* hidden by default */
+  border-radius: 8px;
+  transition: background 0.3s ease-in-out;
+}
+
+/* When scrolling — scrollbar becomes visible */
+.scroll-appear.scrolling::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out;
+}
+
+.ap-input {
+  width: 100% !important;
+  border-radius: 12px !important;
+  border: 2px solid #c084fc !important;
+  padding: 12px !important;
+}
+
+.ap-dropdown-menu {
+  z-index: 99999 !important;
+  background: white !important;
+  border-radius: 12px !important;
+  border: 1px solid #e5e7eb !important;
+}
+/* Force SweetAlert above all modals */
+.swal2-container {
+  z-index: 999999 !important;
+}
+
+.swal2-popup {
+  z-index: 1000000 !important;
+  position: relative !important;
+}
