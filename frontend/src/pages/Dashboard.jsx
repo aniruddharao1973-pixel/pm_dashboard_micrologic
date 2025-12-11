@@ -498,7 +498,7 @@ function Dashboard() {
     try {
       let res;
 
-      if (user.role === "admin") {
+      if (user.role === "admin" || user.role === "techsales") {
         res = await api.get("/dashboard/admin");
 
         setStats({
@@ -558,7 +558,7 @@ function Dashboard() {
           </h1>
 
           <p className="text-gray-600 text-lg">
-            {user.role === "admin"
+            {user.role === "admin" || user.role === "techsales"
               ? "Here's your dashboard summary for today."
               : "Here's your project summary for today."}
           </p>
@@ -566,13 +566,13 @@ function Dashboard() {
 
 <div
   className={`grid gap-6 ${
-    user.role === "admin"
+    user.role === "admin" || user.role === "techsales"
       ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-2"
       : "grid-cols-1 sm:grid-cols-2"
   }`}
 >
 
-          {user.role === "admin" && (
+          {(user.role === "admin" || user.role === "techsales") && (
             <div
               onClick={() => navigate("/admin/customers")}
               className="group cursor-pointer bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden relative"
@@ -615,7 +615,7 @@ function Dashboard() {
                     <Folder className="text-blue-600" size={24} />
                   </div>
                   <h3 className="text-gray-700 text-base font-semibold">
-                    {user.role === "admin" ? "Total Projects" : "My Projects"}
+                    {user.role === "admin" || user.role === "techsales" ? "Total Projects" : "My Projects"}
                   </h3>
                 </div>
               </div>

@@ -215,6 +215,8 @@
 
 
 
+
+
 // backend/controllers/adminController.js
 
 import bcrypt from "bcrypt";
@@ -226,6 +228,9 @@ import { insertEmailLog, getEmailLogs } from "../models/emailLogModel.js";
 /* ---------------------------------------------------
    1️⃣ Create Customer (Admin Only) — UPDATED FOR COMPANIES + COLLABORATOR
 --------------------------------------------------- */
+/* ---------------------------------------------------
+   1️⃣ Create Customer (Admin Only) — CLEANED (NO COLLABORATOR AUTO-CREATION)
+--------------------------------------------------- */
 export const createCustomer = async (req, res) => {
   const {
     name,
@@ -233,7 +238,6 @@ export const createCustomer = async (req, res) => {
     externalId,
     location,
     contactPerson,
-    contactEmail,          // collaborator email (CAN repeat)
     contactPhone,
     registerDate
   } = req.body;
@@ -245,17 +249,14 @@ export const createCustomer = async (req, res) => {
     externalId,
     location,
     contactPerson,
-    contactEmail,
     contactPhone,
     registerDate
   });
 
   try {
     /* ---------------------------------------------------
-       1️⃣ VALIDATIONS
+       1️⃣ VALIDATION: Admin Email must be unique
     --------------------------------------------------- */
-
-    // Check if customer admin email already exists (must be unique)
     const adminExists = await pool.query(
       "SELECT id FROM users WHERE email = $1 LIMIT 1",
       [email]
@@ -268,14 +269,9 @@ export const createCustomer = async (req, res) => {
       });
     }
 
-    // ❌ REMOVED VALIDATION:
-    // Collaborator email is allowed to repeat,
-    // so NO duplicate check here.
-
     /* ---------------------------------------------------
-       2️⃣ COMPANY CREATION / FETCH
+       2️⃣ CREATE OR GET COMPANY
     --------------------------------------------------- */
-
     const compRes = await pool.query(
       "SELECT id FROM companies WHERE LOWER(name) = LOWER($1) LIMIT 1",
       [name]
@@ -289,22 +285,22 @@ export const createCustomer = async (req, res) => {
     } else {
       console.log("Creating NEW company:", name);
 
-      const newComp = await pool.query(
-        `INSERT INTO companies
-           (name, external_id, location, contact_person, contact_email, contact_phone, register_date, created_by)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-         RETURNING id`,
-        [
-          name,
-          externalId || null,
-          location || null,
-          contactPerson || null,
-          contactEmail || null,
-          contactPhone || null,
-          registerDate || null,
-          req.user.id
-        ]
-      );
+    const newComp = await pool.query(
+      `INSERT INTO companies
+        (name, external_id, location, contact_person, contact_phone, register_date, created_by)
+      VALUES ($1,$2,$3,$4,$5,$6,$7)
+      RETURNING id`,
+      [
+        name,
+        externalId || null,
+        location || null,
+        contactPerson || null,
+        contactPhone || null,
+        registerDate || null,
+        req.user.id
+      ]
+    );
+
 
       companyId = newComp.rows[0].id;
       console.log("New company created:", companyId);
@@ -313,7 +309,6 @@ export const createCustomer = async (req, res) => {
     /* ---------------------------------------------------
        3️⃣ CREATE CUSTOMER ADMIN USER
     --------------------------------------------------- */
-
     const adminTempPassword = crypto.randomBytes(6).toString("hex");
     const adminHash = await bcrypt.hash(adminTempPassword, 12);
 
@@ -333,102 +328,41 @@ export const createCustomer = async (req, res) => {
     );
 
     /* ---------------------------------------------------
-       4️⃣ CREATE COLLABORATOR USER
+       4️⃣ SEND ADMIN EMAIL (NON-BLOCKING)
     --------------------------------------------------- */
+    Promise.resolve().then(async () => {
+      try {
+        console.log("📧 Sending admin email in background...");
+        const emailResp = await sendCustomerCredentials({
+          toEmail: customerAdmin.email,
+          name: customerAdmin.name,
+          tempPassword: adminTempPassword,
+        });
 
-    const collabTempPassword = crypto.randomBytes(6).toString("hex");
-    const collabHash = await bcrypt.hash(collabTempPassword, 12);
+        await insertEmailLog({
+          customer_id: customerAdmin.id,
+          email: customerAdmin.email,
+          temporary_password: adminTempPassword,
+          subject: "Your PM Dashboard Admin Login Credentials",
+          body: JSON.stringify(emailResp),
+          status: "sent",
+          error: null,
+        });
 
-    const collabInsert = await pool.query(
-      `INSERT INTO users (name, email, password_hash, role, must_change_password)
-       VALUES ($1, $2, $3, 'collaborator', true)
-       RETURNING id, name, email, role`,
-      [
-        contactPerson || contactEmail.split("@")[0],
-        contactEmail,
-        collabHash
-      ]
-    );
-
-    const collaborator = collabInsert.rows[0];
-
-    await pool.query(
-      `INSERT INTO user_companies (user_id, company_id)
-       VALUES ($1, $2)`,
-      [collaborator.id, companyId]
-    );
+        console.log("📧 Admin email sent & logged.");
+      } catch (err) {
+        console.error("❌ Background admin email failed:", err);
+      }
+    });
 
     /* ---------------------------------------------------
-       5️⃣ SEND EMAIL TO CUSTOMER ADMIN
-    --------------------------------------------------- */
-/* ---------------------------------------------------
-   5️⃣ SEND ADMIN EMAIL (NON-BLOCKING)
---------------------------------------------------- */
-Promise.resolve().then(async () => {
-  try {
-    console.log("📧 Sending admin email in background...");
-    const emailResp = await sendCustomerCredentials({
-      toEmail: customerAdmin.email,
-      name: customerAdmin.name,
-      tempPassword: adminTempPassword,
-    });
-
-    await insertEmailLog({
-      customer_id: customerAdmin.id,
-      email: customerAdmin.email,
-      temporary_password: adminTempPassword,
-      subject: "Your PM Dashboard Admin Login Credentials",
-      body: JSON.stringify(emailResp),
-      status: "sent",
-      error: null,
-    });
-
-    console.log("📧 Admin email sent & logged.");
-  } catch (err) {
-    console.error("❌ Background admin email failed:", err);
-  }
-});
-
-
-/* ---------------------------------------------------
-   6️⃣ SEND COLLABORATOR EMAIL (NON-BLOCKING)
---------------------------------------------------- */
-Promise.resolve().then(async () => {
-  try {
-    console.log("📧 Sending collaborator email in background...");
-    const emailResp = await sendCustomerCredentials({
-      toEmail: collaborator.email,
-      name: collaborator.name,
-      tempPassword: collabTempPassword,
-    });
-
-    await insertEmailLog({
-      customer_id: collaborator.id,
-      email: collaborator.email,
-      temporary_password: collabTempPassword,
-      subject: "Your PM Dashboard Collaborator Login Credentials",
-      body: JSON.stringify(emailResp),
-      status: "sent",
-      error: null,
-    });
-
-    console.log("📧 Collaborator email sent & logged.");
-  } catch (err) {
-    console.error("❌ Background collaborator email failed:", err);
-  }
-});
-
-
-    /* ---------------------------------------------------
-       7️⃣ FINAL RESPONSE
+       5️⃣ FINAL RESPONSE
     --------------------------------------------------- */
     res.json({
-      message: "Customer with Admin + Collaborator created successfully",
+      message: "Customer created successfully (Admin only)",
       companyId,
       adminUser: customerAdmin,
-      collaborator,
       adminTempPassword,
-      collabTempPassword,
       emailSent: true
     });
 
@@ -437,6 +371,7 @@ Promise.resolve().then(async () => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 
@@ -554,7 +489,9 @@ export const createProject = async (req, res) => {
     "Software Documents",
     "DAP",
     "Order Acceptence",
-    "PWO"
+    "IWO",
+    "Media Assets",     // ⭐ NEW
+    "INC"               // ⭐ NEW
   ];
 
   try {
@@ -1009,57 +946,57 @@ export const updateCustomerProfile = async (req, res) => {
        3️⃣ SYNC collaborator user if contactEmail or contactPerson changed
     --------------------------------------------------- */
 
-    const collaboratorRes = await pool.query(
-      `SELECT u.id 
-       FROM user_companies uc
-       JOIN users u ON u.id = uc.user_id
-       WHERE uc.company_id = $1 AND u.role = 'collaborator'
-       LIMIT 1`,
-      [companyId]
-    );
+    // const collaboratorRes = await pool.query(
+    //   `SELECT u.id 
+    //    FROM user_companies uc
+    //    JOIN users u ON u.id = uc.user_id
+    //    WHERE uc.company_id = $1 AND u.role = 'collaborator'
+    //    LIMIT 1`,
+    //   [companyId]
+    // );
 
-    if (collaboratorRes.rows.length > 0) {
-      const collaboratorId = collaboratorRes.rows[0].id;
+    // if (collaboratorRes.rows.length > 0) {
+    //   const collaboratorId = collaboratorRes.rows[0].id;
 
-      const shouldUpdateEmail =
-        contactEmail && contactEmail !== oldCompany.contact_email;
+    //   const shouldUpdateEmail =
+    //     contactEmail && contactEmail !== oldCompany.contact_email;
 
-      const shouldUpdateName =
-        contactPerson && contactPerson !== oldCompany.contact_person;
+    //   const shouldUpdateName =
+    //     contactPerson && contactPerson !== oldCompany.contact_person;
 
-      // 🔍 Check email conflict BEFORE updating collaborator
-      if (shouldUpdateEmail) {
-        const emailTaken = await pool.query(
-          "SELECT id FROM users WHERE email = $1 LIMIT 1",
-          [contactEmail]
-        );
+    //   // 🔍 Check email conflict BEFORE updating collaborator
+    //   if (shouldUpdateEmail) {
+    //     const emailTaken = await pool.query(
+    //       "SELECT id FROM users WHERE email = $1 LIMIT 1",
+    //       [contactEmail]
+    //     );
 
-        if (
-          emailTaken.rows.length > 0 &&
-          emailTaken.rows[0].id !== collaboratorId
-        ) {
-          return res.status(400).json({
-            message: "Contact Email is already used by another user",
-          });
-        }
-      }
+    //     if (
+    //       emailTaken.rows.length > 0 &&
+    //       emailTaken.rows[0].id !== collaboratorId
+    //     ) {
+    //       return res.status(400).json({
+    //         message: "Contact Email is already used by another user",
+    //       });
+    //     }
+    //   }
 
-      // 🔄 Now update collaborator user
-      if (shouldUpdateEmail || shouldUpdateName) {
-        await pool.query(
-          `UPDATE users 
-           SET 
-             email = COALESCE($1, email),
-             name  = COALESCE($2, name)
-           WHERE id = $3`,
-          [
-            shouldUpdateEmail ? contactEmail : null,
-            shouldUpdateName ? contactPerson : null,
-            collaboratorId
-          ]
-        );
-      }
-    }
+    //   // 🔄 Now update collaborator user
+    //   if (shouldUpdateEmail || shouldUpdateName) {
+    //     await pool.query(
+    //       `UPDATE users 
+    //        SET 
+    //          email = COALESCE($1, email),
+    //          name  = COALESCE($2, name)
+    //        WHERE id = $3`,
+    //       [
+    //         shouldUpdateEmail ? contactEmail : null,
+    //         shouldUpdateName ? contactPerson : null,
+    //         collaboratorId
+    //       ]
+    //     );
+    //   }
+    // }
 
     res.json({
       message: "Company profile updated successfully (with collaborator sync)",

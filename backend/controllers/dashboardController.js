@@ -145,12 +145,12 @@ import { pool } from "../db.js";
    Count COMPANY records, not users.
    ============================================================ */
 export const getAdminStats = async (req, res) => {
-  if (req.user.role !== "admin") {
+  // Allow admin OR techsales
+  if (req.user.role !== "admin" && req.user.role !== "techsales") {
     return res.status(403).json({ message: "Access denied" });
   }
 
   try {
-    // ⭐ Count distinct companies = actual customers
     const customerCount = await pool.query(
       "SELECT COUNT(*) FROM companies"
     );
@@ -168,7 +168,7 @@ export const getAdminStats = async (req, res) => {
     );
 
     res.json({
-      totalCustomers: Number(customerCount.rows[0].count), // FIXED
+      totalCustomers: Number(customerCount.rows[0].count),
       totalProjects: Number(projectCount.rows[0].count),
       totalFolders: Number(folderCount.rows[0].count),
       totalDocuments: Number(documentCount.rows[0].count),
@@ -179,6 +179,7 @@ export const getAdminStats = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 /* ============================================================

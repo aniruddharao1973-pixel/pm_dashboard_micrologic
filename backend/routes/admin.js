@@ -126,10 +126,13 @@ import {
   addCollaborator,
   deleteCompany,   
   deleteCollaborator,
-  deleteProject
+  deleteProject,
+   getProjects 
 } from "../controllers/adminController.js";
 
-import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
+// import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
+import { authMiddleware, requireAdminOrTechSales } from "../middleware/authMiddleware.js";
+
 
 const router = express.Router();
 
@@ -139,7 +142,7 @@ const router = express.Router();
 router.post(
   "/create-customer",
   authMiddleware,
-  requireRole("admin"),
+  requireAdminOrTechSales,
   createCustomer
 );
 
@@ -149,7 +152,7 @@ router.post(
 router.post(
   "/create-project",
   authMiddleware,
-  requireRole("admin"),
+  requireAdminOrTechSales,
   createProject
 );
 
@@ -159,7 +162,7 @@ router.post(
 router.post(
   "/create-folder",
   authMiddleware,
-  requireRole("admin"),
+  requireAdminOrTechSales,
   createFolder
 );
 
@@ -169,7 +172,7 @@ router.post(
 router.get(
   "/customers",
   authMiddleware,
-  requireRole("admin"),
+  requireAdminOrTechSales,
   getCustomers
 );
 
@@ -179,7 +182,7 @@ router.get(
 router.get(
   "/customers/:customerId",
   authMiddleware,
-  requireRole("admin"),
+  requireAdminOrTechSales,
   getCustomerById
 );
 
@@ -189,7 +192,7 @@ router.get(
 router.get(
   "/company/:companyId",
   authMiddleware,
-  requireRole("admin"),
+  requireAdminOrTechSales,
   getCompanyProfile
 );
 
@@ -199,7 +202,7 @@ router.get(
 router.put(
   "/company/:companyId",
   authMiddleware,
-  requireRole("admin"),
+  requireAdminOrTechSales,
   updateCustomerProfile
 );
 
@@ -209,7 +212,7 @@ router.put(
 router.delete(
   "/company/:companyId",
   authMiddleware,
-  requireRole("admin"),
+  requireAdminOrTechSales,
   deleteCompany
 );
 
@@ -219,7 +222,7 @@ router.delete(
 router.post(
   "/add-collaborator",
   authMiddleware,
-  requireRole("admin"),
+  requireAdminOrTechSales,
   addCollaborator
 );
 
@@ -229,9 +232,19 @@ router.post(
 router.delete(
   "/collaborator/:userId",
   authMiddleware,
-  requireRole("admin"),
+  requireAdminOrTechSales,
   deleteCollaborator
 );
+
+  /* ---------------------------------------------------
+    🔍 Get All Projects (Admin + Tech Sales)
+  --------------------------------------------------- */
+  router.get(
+    "/projects",
+    authMiddleware,
+    requireAdminOrTechSales,
+    getProjects
+  );
 
 /* ---------------------------------------------------
    Delete Single Project
@@ -239,7 +252,7 @@ router.delete(
 router.delete(
   "/project/:projectId",
   authMiddleware,
-  requireRole("admin"),
+ requireAdminOrTechSales,
   deleteProject
 );
 

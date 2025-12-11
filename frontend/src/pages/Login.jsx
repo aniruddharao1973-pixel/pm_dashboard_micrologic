@@ -225,11 +225,14 @@ const Login = () => {
         }
       });
 
-      if (res.data.user.role === "admin") {
-        navigate("/dashboard");
-      } else {
-        navigate("/customer/dashboard");
-      }
+        // Admin + Tech Sales → same dashboard
+        if (res.data.user.role === "admin" || res.data.user.role === "techsales") {
+          navigate("/dashboard");
+        } else {
+          // Customer + Collaborator → customer dashboard
+          navigate("/customer/dashboard");
+        }
+
 
     } catch (err) {
       Swal.fire({

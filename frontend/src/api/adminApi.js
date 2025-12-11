@@ -8,9 +8,10 @@ export const useAdminApi = () => {
       CUSTOMER / COMPANY
   --------------------------------------------- */
 
-  // Create new customer (creates company + admin + collaborator)
-  const createCustomer = (payload) =>
-    api.post("/admin/create-customer", payload);
+    // Create new customer (creates company + admin only)
+    const createCustomer = (payload) =>
+      api.post("/admin/create-customer", payload);
+
 
   // Get list of companies + their admin users
   const getCustomers = () => api.get("/admin/customers");

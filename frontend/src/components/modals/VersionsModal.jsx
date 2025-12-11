@@ -1860,7 +1860,7 @@ const VersionsModal = ({ document: doc, versions = [], onClose, onRefresh }) => 
                           onClick={(e) => e.stopPropagation()} // prevent expanding
                         >
                           {/* DOWNLOAD BUTTON */}
-                          {(user.role === "admin" || doc.can_download) ? (
+                          {(user.role === "admin" || user.role === "techsales" || doc.can_download) ? (
                             <button
                               onClick={async () => {
                                 try {

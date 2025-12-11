@@ -215,6 +215,28 @@ const App = () => {
     connectSocket(token);
   }, []);
 
+  const FallbackRedirect = () => {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Admin & Tech Sales → Customer list page
+  if (user.role === "admin" || user.role === "techsales") {
+    return <Navigate to="/admin/customers" replace />;
+  }
+
+  // Customer & Collaborator → Their dashboard
+  if (user.role === "customer" || user.role === "collaborator") {
+    return <Navigate to="/customer/dashboard" replace />;
+  }
+
+  // Default safety net
+  return <Navigate to="/login" replace />;
+};
+
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Routes>
@@ -357,7 +379,9 @@ const App = () => {
           }
         />
 
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        {/* <Route path="*" element={<Navigate to="/dashboard" replace />} /> */}
+         <Route path="*" element={<FallbackRedirect />} />
+
         {/*  <Route path="*" element={<Navigate to="/admin/customers" replace />} /> */}
 
 
