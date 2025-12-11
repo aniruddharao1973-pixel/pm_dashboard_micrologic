@@ -1675,6 +1675,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAdminApi } from "../../api/adminApi";
+import { useAuth } from "../../hooks/useAuth";   // <-- ADD THIS
 import Swal from "sweetalert2";
 
 export default function CustomerProfile() {
@@ -1690,36 +1691,53 @@ export default function CustomerProfile() {
   const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
+const { isAdminLike } = useAuth(); // <-- add this
+
 
   // -------------------------------
   // FETCH COMPANY PROFILE
   // -------------------------------
   useEffect(() => {
-    (async () => {
-      try {
-        console.log("Fetching company profile:", companyId);
-        const res = await getCustomer(companyId);
-        const companyData = res.data;
+  let cancelled = false;
 
-        // Admin = first user
-        const adminUser = companyData.users[0] || null;
-
-        // Collaborators = rest of users
-        const collaborators = companyData.users.slice(1);
-
-        setData({
-          company: companyData.company,
-          admin: adminUser,
-          collaborators: collaborators,
-          projects: companyData.projects,
-        });
-      } catch (err) {
-        console.error("Load company profile error", err);
-      } finally {
-        setLoading(false);
+  async function load() {
+    try {
+      if (!isAdminLike) {
+        navigate("/projects", { replace: true });
+        return;
       }
-    })();
-  }, [companyId]);
+
+      console.log("Fetching company profile:", companyId);
+      const res = await getCustomer(companyId); // call the hook function but do not include it in deps
+      if (cancelled) return;
+
+      const companyData = res.data || {};
+      const adminUser = (companyData.users && companyData.users[0]) || null;
+      const collaborators = (companyData.users && companyData.users.slice(1)) || [];
+
+      setData({
+        company: companyData.company || null,
+        admin: adminUser,
+        collaborators,
+        projects: companyData.projects || [],
+      });
+    } catch (err) {
+      if (cancelled) return;
+      console.error("Load company profile error", err);
+    } finally {
+      if (!cancelled) setLoading(false);
+    }
+  }
+
+  load();
+
+  return () => {
+    cancelled = true;
+  };
+  // intentionally NOT including getCustomer to avoid re-runs if the hook returns a new function each render
+}, [companyId, isAdminLike, navigate]);
+
+
 
   // -------------------------------
   // DELETE COLLABORATOR HANDLER
@@ -1842,12 +1860,23 @@ export default function CustomerProfile() {
       <div className="max-w-7xl mx-auto">
 
         {/* Breadcrumb */}
-        <nav className="mb-4 sm:mb-6">
-          <p className="text-xs sm:text-sm text-gray-600 font-medium">
-            Customers <span className="text-gray-400 mx-1 sm:mx-2">›</span>
-            <span className="text-gray-900 font-semibold">{company.name}</span>
-          </p>
-        </nav>
+<nav className="mb-4 sm:mb-6">
+  <p className="text-xs sm:text-sm text-gray-600 font-medium">
+    {/* "Customers" label always static */}
+    <span className="cursor-default">Customers</span>
+    <span className="text-gray-400 mx-1 sm:mx-2">›</span>
+
+    {/* If user is admin, show company name (unchanged). If customer, link to /projects */}
+    {isAdminLike ? (
+      <span className="text-gray-900 font-semibold">{company.name}</span>
+    ) : (
+      <Link to="/projects" className="text-indigo-600 font-semibold underline-offset-2 hover:underline">
+        {company.name}
+      </Link>
+    )}
+  </p>
+</nav>
+
 
         {/* Hero / Top Card */}
         <header className="mb-6 sm:mb-10">
