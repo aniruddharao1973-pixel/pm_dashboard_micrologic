@@ -113,13 +113,14 @@ body {
 /* ===== SIDEBAR SPECIFIC FIXES ===== */
 
 /* Force GPU acceleration for smooth transforms */
+/* Do NOT override transform for every .fixed element,
+   otherwise Tailwind's translate-x-* cannot work for the sidebar */
 .fixed {
   position: fixed !important;
-  -webkit-transform: translate3d(0,0,0);
-  transform: translate3d(0,0,0);
   backface-visibility: hidden;
   will-change: transform, opacity;
 }
+
 
 /* Sidebar transition helpers (keeps element mounted while animating) */
 .sidebar-transition {
