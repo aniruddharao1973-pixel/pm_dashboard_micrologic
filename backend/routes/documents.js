@@ -4,6 +4,7 @@
 import express from "express";
 import { upload } from "../middleware/uploadMiddleware.js";
 
+
 import {
   uploadDocument,
   getDocumentsByFolder,
@@ -14,6 +15,7 @@ import {
 
 import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
 import * as commentsController from "../controllers/commentsController.js";
+import authorizeResource from "../middleware/authorizeResource.js";   // ⭐ ADD THIS
 import { pool } from "../db.js";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -49,6 +51,7 @@ router.post(
 router.patch(
   "/:documentId/toggle-download",
   authMiddleware,
+  authorizeResource,       // ⭐ ADD THIS
   requireRole("admin"),
   (req, res) => {
     req.params.documentId = req.params.documentId.trim();
@@ -56,17 +59,20 @@ router.patch(
   }
 );
 
+
 /* ============================================================================
    GET DOCUMENTS BY FOLDER
 ============================================================================ */
 router.get(
   "/folder/:folderId",
   authMiddleware,
+  authorizeResource,   // ⭐ ADD THIS
   (req, res) => {
     req.params.folderId = req.params.folderId.trim();
     getDocumentsByFolder(req, res);
   }
 );
+
 
 /* ============================================================================
    VERSION HISTORY
@@ -74,11 +80,13 @@ router.get(
 router.get(
   "/:documentId/versions",
   authMiddleware,
+  authorizeResource,   // ⭐ ADD THIS
   (req, res) => {
     req.params.documentId = req.params.documentId.trim();
     getDocumentVersions(req, res);
   }
 );
+
 
 /* ============================================================================
    DELETE DOCUMENT
@@ -86,11 +94,13 @@ router.get(
 router.delete(
   "/:documentId",
   authMiddleware,
+  authorizeResource,   // ⭐ ADD THIS
   (req, res) => {
     req.params.documentId = req.params.documentId.trim();
     deleteDocument(req, res);
   }
 );
+
 
 /* ============================================================================
    COMMENTS (DISCUSSION)
@@ -98,6 +108,7 @@ router.delete(
 router.post(
   "/:documentId/comments",
   authMiddleware,
+  authorizeResource,     // ⭐ ADD THIS
   (req, res) => {
     req.params.documentId = req.params.documentId.trim();
     commentsController.addComment(req, res);
@@ -107,6 +118,7 @@ router.post(
 router.get(
   "/:documentId/comments",
   authMiddleware,
+  authorizeResource,     // ⭐ ADD THIS
   (req, res) => {
     req.params.documentId = req.params.documentId.trim();
     commentsController.getComments(req, res);

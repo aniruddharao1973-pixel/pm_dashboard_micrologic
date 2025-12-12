@@ -1,3 +1,5 @@
+
+// // backend/controllers/authController.js
 // import bcrypt from "bcrypt";
 // import jwt from "jsonwebtoken";
 // import { pool } from "../db.js";
@@ -39,8 +41,9 @@
 //     const token = jwt.sign(
 //       { id: user.id, email: user.email, role: user.role },
 //       process.env.JWT_SECRET,
-//       { expiresIn: "30s" }
+//       { expiresIn: "24h" }
 //     );
+
 
 //     res.json({
 //       message: "Login successful",
@@ -127,8 +130,47 @@
 // };
 
 
+// /* -----------------------------------------------------
+//    SECURE REFRESH TOKEN (PROTECTED + SAFE)
+// ----------------------------------------------------- */
+// export const refreshToken = async (req, res) => {
 
+//   console.log("🔄 Refresh called by:", req.user?.role, req.user?.email);
 
+//   const oldToken = req.body.token;
+
+//   if (!oldToken) {
+//     return res.status(400).json({ message: "Token missing" });
+//   }
+
+//   try {
+//     // Decode token without checking expiration
+//     const decoded = jwt.verify(oldToken, process.env.JWT_SECRET, {
+//       ignoreExpiration: true,
+//     });
+
+//     // 🔒 SECURITY CHECK — ROLE AND USER MUST MATCH REQUEST USER
+//     if (decoded.role !== req.user.role || decoded.id !== req.user.id) {
+//       console.log("❌ Token role/user mismatch. Blocking refresh.");
+//       return res.status(401).json({ message: "Invalid refresh attempt" });
+//     }
+
+//     // 🔄 Issue NEW token with same role & user
+//     const newToken = jwt.sign(
+//       { id: decoded.id, email: decoded.email, role: decoded.role },
+//       process.env.JWT_SECRET,
+//       { expiresIn: "24h" }
+//     );
+
+//     console.log("🔄 Token refreshed for:", decoded.email, decoded.role);
+
+//     return res.json({ token: newToken });
+
+//   } catch (err) {
+//     console.error("RefreshToken Error:", err);
+//     return res.status(401).json({ message: "Invalid token" });
+//   }
+// };
 
 
 // backend/controllers/authController.js
@@ -137,7 +179,7 @@ import jwt from "jsonwebtoken";
 import { pool } from "../db.js";
 
 /* -----------------------------------------------------
-   LOGIN 
+   LOGIN
 ----------------------------------------------------- */
 export const login = async (req, res) => {
   const { email, password } = req.body;
@@ -170,12 +212,17 @@ export const login = async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" }
-    );
+    // Build token payload including company_id for tenant checks
+    const payload = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      company_id: user.company_id ?? null,
+    };
 
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: "24h",
+    });
 
     res.json({
       message: "Login successful",
@@ -185,15 +232,14 @@ export const login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        company_id: user.company_id ?? null,
       },
     });
-
   } catch (err) {
     console.error("Login Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 /* -----------------------------------------------------
    SET NEW PASSWORD (FIRST LOGIN)
@@ -216,13 +262,11 @@ export const setNewPassword = async (req, res) => {
     );
 
     res.json({ message: "Password updated successfully" });
-
   } catch (err) {
     console.error("SetNewPassword Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 /* -----------------------------------------------------
    NORMAL CHANGE PASSWORD (NOT FIRST LOGIN)
@@ -241,32 +285,33 @@ export const changePassword = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const match = await bcrypt.compare(oldPassword, result.rows[0].password_hash);
+    const match = await bcrypt.compare(
+      oldPassword,
+      result.rows[0].password_hash
+    );
     if (!match) {
       return res.status(400).json({ message: "Old password is incorrect" });
     }
 
     const newHash = await bcrypt.hash(newPassword, 12);
 
-    await pool.query(
-      `UPDATE users SET password_hash = $1 WHERE id = $2`,
-      [newHash, userId]
-    );
+    await pool.query(`UPDATE users SET password_hash = $1 WHERE id = $2`, [
+      newHash,
+      userId,
+    ]);
 
     res.json({ message: "Password changed successfully" });
-
   } catch (err) {
     console.error("ChangePassword Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-
 /* -----------------------------------------------------
    SECURE REFRESH TOKEN (PROTECTED + SAFE)
+   - preserves company_id from the old token
 ----------------------------------------------------- */
 export const refreshToken = async (req, res) => {
-
   console.log("🔄 Refresh called by:", req.user?.role, req.user?.email);
 
   const oldToken = req.body.token;
@@ -281,27 +326,29 @@ export const refreshToken = async (req, res) => {
       ignoreExpiration: true,
     });
 
-    // 🔒 SECURITY CHECK — ROLE AND USER MUST MATCH REQUEST USER
+    // SECURITY CHECK — ROLE AND USER MUST MATCH REQUEST USER
     if (decoded.role !== req.user.role || decoded.id !== req.user.id) {
       console.log("❌ Token role/user mismatch. Blocking refresh.");
       return res.status(401).json({ message: "Invalid refresh attempt" });
     }
 
-    // 🔄 Issue NEW token with same role & user
-    const newToken = jwt.sign(
-      { id: decoded.id, email: decoded.email, role: decoded.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" }
-    );
+    // Preserve company_id when issuing new token
+    const newPayload = {
+      id: decoded.id,
+      email: decoded.email,
+      role: decoded.role,
+      company_id: decoded.company_id ?? null,
+    };
+
+    const newToken = jwt.sign(newPayload, process.env.JWT_SECRET, {
+      expiresIn: "24h",
+    });
 
     console.log("🔄 Token refreshed for:", decoded.email, decoded.role);
 
     return res.json({ token: newToken });
-
   } catch (err) {
     console.error("RefreshToken Error:", err);
     return res.status(401).json({ message: "Invalid token" });
   }
 };
-
-

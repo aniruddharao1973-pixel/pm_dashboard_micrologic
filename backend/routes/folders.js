@@ -1,9 +1,15 @@
+
+
+
+// // routes/folders.js
 // import express from "express";
 // import { authMiddleware } from "../middleware/authMiddleware.js";
-// import { pool } from "../db.js";  // ✅ FIXED: required
+// import { pool } from "../db.js";
+
 // import {
 //   getFoldersByProject,
-//   getSubFolders
+//   getSubFolders,
+//   getFolderInfo   // ⭐ NEW: Added controller import
 // } from "../controllers/foldersController.js";
 
 // const router = express.Router();
@@ -19,7 +25,10 @@
 //   }
 // });
 
-// // ⭐ Get subfolders of a folder (frontend expects /sub/:folderId)
+// // ⭐ NEW: Get single folder details (id, name, parent_id) -> breadcrumb needs this
+// router.get("/info/:folderId", authMiddleware, getFolderInfo);
+
+// // ⭐ Get subfolders of a folder
 // router.get("/sub/:folderId", authMiddleware, getSubFolders);
 
 // // ⭐ Get ALL root folders of a project
@@ -28,20 +37,22 @@
 // export default router;
 
 
+
 // routes/folders.js
 import express from "express";
 import { authMiddleware } from "../middleware/authMiddleware.js";
+import authorizeResource from "../middleware/authorizeResource.js";  // ⭐ added
 import { pool } from "../db.js";
 
 import {
   getFoldersByProject,
   getSubFolders,
-  getFolderInfo   // ⭐ NEW: Added controller import
+  getFolderInfo
 } from "../controllers/foldersController.js";
 
 const router = express.Router();
 
-// ⭐ Count all folders
+// Count folders
 router.get("/count", authMiddleware, async (req, res) => {
   try {
     const result = await pool.query("SELECT COUNT(*) FROM folders");
@@ -52,13 +63,26 @@ router.get("/count", authMiddleware, async (req, res) => {
   }
 });
 
-// ⭐ NEW: Get single folder details (id, name, parent_id) -> breadcrumb needs this
-router.get("/info/:folderId", authMiddleware, getFolderInfo);
+// Get single folder info
+router.get("/info/:folderId",
+  authMiddleware,
+  authorizeResource,       // ⭐ enforcing folder-level security
+  getFolderInfo
+);
 
-// ⭐ Get subfolders of a folder
-router.get("/sub/:folderId", authMiddleware, getSubFolders);
+// Get subfolders
+router.get("/sub/:folderId",
+  authMiddleware,
+  authorizeResource,       // ⭐ enforcing folder-level security
+  getSubFolders
+);
 
-// ⭐ Get ALL root folders of a project
-router.get("/:projectId", authMiddleware, getFoldersByProject);
+// Get all folders in a project
+router.get("/:projectId",
+  authMiddleware,
+  authorizeResource,       // ⭐ enforcing project-level security
+  getFoldersByProject
+);
 
 export default router;
+
