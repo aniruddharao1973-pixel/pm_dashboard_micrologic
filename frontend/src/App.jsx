@@ -178,6 +178,8 @@ import CustomerList from "./pages/admin/CustomerList";
 import CustomerProfile from "./pages/admin/CustomerProfile";
 import CreateProject from "./pages/admin/CreateProject";
 import EditCustomer from "./pages/admin/EditCustomer"; // add import
+import ForbiddenPage from "./pages/ForbiddenPage";
+
 
 
 import DashboardLayout from "./layouts/DashboardLayout.jsx";
@@ -243,6 +245,9 @@ const App = () => {
 
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
+
+        <Route path="/forbidden" element={<ForbiddenPage />} />
+
 
         <Route
           path="/dashboard"

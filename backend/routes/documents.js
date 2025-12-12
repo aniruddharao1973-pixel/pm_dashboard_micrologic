@@ -129,7 +129,7 @@ router.get(
 /* ============================================================================
    DOWNLOAD FILE (RESPECT can_download FLAG)
 ============================================================================ */
-router.get("/download/:versionId", authMiddleware, async (req, res) => {
+router.get("/download/:versionId", authMiddleware,authorizeResource, async (req, res) => {
   const versionId = req.params.versionId.trim();
   const userRole = req.user.role;
 

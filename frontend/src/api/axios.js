@@ -1,17 +1,23 @@
+
+
+
+
+
 // // src/api/axios.js
 // import axios from "axios";
 // import { AuthContext } from "../context/AuthContext";
 // import { useContext } from "react";
 
-// // Custom hook to access axios with auth
 // export const useAxios = () => {
-//   const { token, logout } = useContext(AuthContext);
+//   const { token, logout, login, user } = useContext(AuthContext);
 
 //   const instance = axios.create({
-//     baseURL: "http://localhost:5000/api", // <-- change if your backend uses different URL
+//     baseURL: "http://localhost:5000/api",
 //   });
 
-//   // Attach token automatically
+//   /* ---------------------------------------------------------
+//       ATTACH TOKEN FOR EVERY REQUEST
+//   --------------------------------------------------------- */
 //   instance.interceptors.request.use(
 //     (config) => {
 //       if (token) {
@@ -22,41 +28,86 @@
 //     (error) => Promise.reject(error)
 //   );
 
-//   // Auto logout on expired token
-//   instance.interceptors.response.use(
-//     (response) => response,
-//     (error) => {
-//       if (error.response?.status === 401) {
-//         logout();
+//   /* ---------------------------------------------------------
+//       RESPONSE INTERCEPTOR
+//       - Handles token expiry
+//       - Attempts silent refresh
+//       - Retries the failed request
+//   --------------------------------------------------------- */
+// instance.interceptors.response.use(
+//   (response) => response,
+
+//   async (error) => {
+//     const originalRequest = error.config;
+
+//     if (error.response?.status === 401 && !originalRequest._retry) {
+//       originalRequest._retry = true;
+
+//       try {
+//         const res = await axios.post(
+//           "http://localhost:5000/api/auth/refresh",
+//           { token }
+//         );
+
+//         if (res.data.token) {
+//           login(user, res.data.token);
+
+//           originalRequest.headers.Authorization = `Bearer ${res.data.token}`;
+//           return instance(originalRequest);
+//         }
+//       } catch (refreshError) {
+//         console.warn("🔁 Silent refresh failed. Ignoring. Not logging out.");
+//         return Promise.reject(error);
+//         // ❌ DO NOT LOGOUT HERE
 //       }
-//       return Promise.reject(error);
 //     }
-//   );
+
+//     return Promise.reject(error);
+//   }
+// );
+
 
 //   return instance;
 // };
 
 
 
-
 // src/api/axios.js
 import axios from "axios";
-import { AuthContext } from "../context/AuthContext";
 import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
+
+/**
+ * useAxios()
+ *
+ * Returns an axios instance configured for the app.
+ * - attaches token from AuthContext on every request
+ * - on 401 attempts silent refresh using /api/auth/refresh and retries the original request
+ * - on 403 redirects to /forbidden
+ *
+ * IMPORTANT:
+ * - This is a hook-style factory (uses useContext) so call it from React components/hooks only:
+ *     const api = useAxios();
+ *   and then use `api.get(...)`, `api.post(...)`, etc.
+ */
 
 export const useAxios = () => {
   const { token, logout, login, user } = useContext(AuthContext);
 
   const instance = axios.create({
-    baseURL: "http://localhost:5000/api",
+    baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
+    withCredentials: true,
+    // any other defaults...
   });
 
   /* ---------------------------------------------------------
-      ATTACH TOKEN FOR EVERY REQUEST
+     ATTACH TOKEN FOR EVERY REQUEST
   --------------------------------------------------------- */
   instance.interceptors.request.use(
     (config) => {
       if (token) {
+        // ensure headers object exists
+        config.headers = config.headers || {};
         config.headers.Authorization = `Bearer ${token}`;
       }
       return config;
@@ -65,43 +116,71 @@ export const useAxios = () => {
   );
 
   /* ---------------------------------------------------------
-      RESPONSE INTERCEPTOR
-      - Handles token expiry
-      - Attempts silent refresh
-      - Retries the failed request
+     RESPONSE INTERCEPTOR
+     - Handles 403 -> redirect to /forbidden
+     - Handles 401 -> try refresh, then retry original request
   --------------------------------------------------------- */
-instance.interceptors.response.use(
-  (response) => response,
+  instance.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error?.config;
 
-  async (error) => {
-    const originalRequest = error.config;
+      // If server responded
+      const status = error?.response?.status;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const res = await axios.post(
-          "http://localhost:5000/api/auth/refresh",
-          { token }
-        );
-
-        if (res.data.token) {
-          login(user, res.data.token);
-
-          originalRequest.headers.Authorization = `Bearer ${res.data.token}`;
-          return instance(originalRequest);
+      // 403 => redirect to /forbidden (user not allowed)
+      if (status === 403) {
+        try {
+          // Prefer client navigation replace to avoid back button into restricted pages
+          window.location.replace("/forbidden");
+        } catch (e) {
+          // fallback
+          window.location.href = "/forbidden";
         }
-      } catch (refreshError) {
-        console.warn("🔁 Silent refresh failed. Ignoring. Not logging out.");
         return Promise.reject(error);
-        // ❌ DO NOT LOGOUT HERE
       }
+
+      // 401 => token expired / unauthorized. Try silent refresh (only once per failed request).
+      if (status === 401 && originalRequest && !originalRequest._retry) {
+        originalRequest._retry = true;
+        try {
+          // call backend refresh endpoint with current token (server implementation from your backend)
+          const refreshRes = await axios.post(
+            (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000") + "/api/auth/refresh",
+            { token },
+            { withCredentials: true }
+          );
+
+          const newToken = refreshRes?.data?.token;
+          if (newToken) {
+            // update client auth state (call your login helper which should save token + user)
+            // login(user, newToken) is your existing helper — keep if it matches your AuthContext API.
+            try {
+              login(user, newToken);
+            } catch (ctxErr) {
+              // If login helper signature differs, you may need to adapt this call.
+              console.warn("AuthContext.login failed:", ctxErr);
+            }
+
+            // update header and retry original request with new token
+            originalRequest.headers = originalRequest.headers || {};
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            return instance(originalRequest);
+          }
+        } catch (refreshError) {
+          // Silent refresh failed. Do not auto-logout — keep current UX as you requested.
+          console.warn("🔁 Silent refresh failed.", refreshError);
+          // Optional: you could redirect to login here, but we avoid it per your requirements.
+          return Promise.reject(error);
+        }
+      }
+
+      // All other errors -> propagate
+      return Promise.reject(error);
     }
-
-    return Promise.reject(error);
-  }
-);
-
+  );
 
   return instance;
 };
+
+export default useAxios;

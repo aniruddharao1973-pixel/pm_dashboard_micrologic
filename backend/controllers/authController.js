@@ -340,9 +340,9 @@ export const refreshToken = async (req, res) => {
       company_id: decoded.company_id ?? null,
     };
 
-    const newToken = jwt.sign(newPayload, process.env.JWT_SECRET, {
-      expiresIn: "24h",
-    });
+      const newToken = jwt.sign(newPayload, process.env.JWT_SECRET, {
+        expiresIn: "24h",
+      });
 
     console.log("🔄 Token refreshed for:", decoded.email, decoded.role);
 
