@@ -187,10 +187,23 @@ export const login = async (req, res) => {
   console.log("Incoming email:", email);
 
   try {
-    const { rows } = await pool.query(
-      "SELECT * FROM users WHERE email = $1 LIMIT 1",
-      [email]
-    );
+      const { rows } = await pool.query(
+        `
+        SELECT 
+            u.id,
+            u.name,
+            u.email,
+            u.password_hash,
+            u.role,
+            uc.company_id
+        FROM users u
+        LEFT JOIN user_companies uc ON uc.user_id = u.id
+        WHERE u.email = $1
+        LIMIT 1
+        `,
+        [email]
+      );
+
 
     if (rows.length === 0) {
       return res.status(400).json({ message: "User not found" });

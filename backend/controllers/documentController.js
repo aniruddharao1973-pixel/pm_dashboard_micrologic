@@ -216,7 +216,7 @@ export const getDocumentsByFolder = async (req, res) => {
           d.title,
           d.current_version,
           d.status,
-           d.can_download,
+          d.can_download,
           d.created_at,
           d.created_by,
           d.created_by_role,
@@ -224,24 +224,39 @@ export const getDocumentsByFolder = async (req, res) => {
 
           dv.file_path,
           dv.filename,
-          dv.original_filename,   -- ⭐ ADD THIS
+          dv.original_filename,
           dv.version_number,
           dv.uploaded_by,
-          u2.name AS uploaded_by_name
+          u2.name AS uploaded_by_name,
+
+          -- ⭐ REQUIRED FOR authorizeResource security check
+          f.project_id,
+          p.company_id
 
       FROM documents d
+
+      JOIN folders f
+        ON f.id = d.folder_id
+
+      JOIN projects p
+        ON p.id = f.project_id
+
       LEFT JOIN document_versions dv
         ON dv.document_id = d.id
-       AND dv.version_number = d.current_version
+      AND dv.version_number = d.current_version
 
-      LEFT JOIN users u1 ON d.created_by = u1.id
-      LEFT JOIN users u2 ON dv.uploaded_by = u2.id
+      LEFT JOIN users u1 
+        ON d.created_by = u1.id
+
+      LEFT JOIN users u2 
+        ON dv.uploaded_by = u2.id
 
       WHERE d.folder_id = $1
       ORDER BY d.created_at DESC
       `,
       [folderId]
     );
+
 
     res.json(result.rows);
   } catch (error) {

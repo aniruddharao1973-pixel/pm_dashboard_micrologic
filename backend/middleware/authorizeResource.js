@@ -2,6 +2,7 @@
 // ESM module — replace the existing file content with this.
 
 import { pool } from "../db.js";
+import { accessDenied } from "../utils/accessDenied.js";
 import validatorPkg from "validator";
 const { isUUID } = validatorPkg;
 
@@ -24,34 +25,92 @@ const { isUUID } = validatorPkg;
  *   router.get('/folder/:folderId', authMiddleware, authorizeResource, controller)
  */
 export default async function authorizeResource(req, res, next) {
+      console.log("----- AUTHORIZE RESOURCE -----");
+    console.log("URL:", req.originalUrl);
+    console.log("User:", req.user);
+    console.log("Params:", req.params);
+    console.log("Query:", req.query);
+
   try {
     const user = req.user;
     if (!user) return res.status(401).json({ error: "Unauthenticated" });
 
     // Global admin bypass
-    if (user.role === "admin") {
+    // Global admin + tech_sales bypass
+    if (user.role === "admin" || user.role === "techsales") {
       return next();
     }
 
+
     // normalize candidate ids from params or query
-    const folderId = req.params.folderId || req.params.folder_id || req.query.folderId || req.query.folder_id;
-    const documentId = req.params.documentId || req.params.document_id || req.params.id || req.query.documentId || req.query.document_id;
-    const versionId = req.params.versionId || req.params.version_id || req.query.versionId || req.query.version_id;
-    const projectId = req.params.projectId || req.params.project_id || req.query.projectId || req.query.project_id;
+const folderId =
+  req.params.folderId ||
+  req.params.folder_id ||
+  req.query.folderId ||
+  req.query.folder_id;
+
+const documentId =
+  req.params.documentId ||
+  req.params.document_id ||
+  req.params.id ||
+  req.query.documentId ||
+  req.query.document_id;
+
+const versionId =
+  req.params.versionId ||
+  req.params.version_id ||
+  req.query.versionId ||
+  req.query.version_id;
+
+const projectId =
+  req.params.projectId ||
+  req.params.project_id ||
+  req.query.projectId ||
+  req.query.project_id;
+
+console.log("Normalized IDs =>", {
+  folderId,
+  documentId,
+  versionId,
+  projectId
+});
+
 
     // best-effort audit log inserter (non-blocking)
-    const auditLog = async ({ user_id, action, resource_type, resource_id, success = false }) => {
-      try {
-        await pool.query(
-          `INSERT INTO audit_logs(user_id, action, resource_type, resource_id, success, created_at)
-           VALUES ($1,$2,$3,$4,$5, now())`,
-          [user_id, action, resource_type, resource_id, success]
-        );
-      } catch (e) {
-        // swallow logging errors so auth flow isn't blocked
-        console.warn("audit log failed:", e?.message || e);
-      }
-    };
+// best-effort audit log inserter (non-blocking)
+const auditLog = async ({ user_id, action, entity_type, entity_id, meta = null }) => {
+  try {
+    await pool.query(
+      `
+      INSERT INTO audit_logs (
+        user_id,
+        action,
+        entity_type,
+        entity_id,
+        meta,
+        ip_address,
+        created_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, now())
+      `,
+      [
+        user_id,
+        action,
+        entity_type,
+        entity_id,
+        meta,
+        req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+        req.socket?.remoteAddress ||
+        req.ip
+      ]
+
+    );
+  } catch (e) {
+    // never block authorization because of audit logging
+    console.warn("audit log failed:", e?.message || e);
+  }
+};
+
 
     // helper to check equality (null-safe)
     const companyMatches = (resourceCompanyId) => {
@@ -62,6 +121,8 @@ export default async function authorizeResource(req, res, next) {
 
     // 1) versionId (document_versions) — protects download routes
     if (versionId) {
+  console.log("🔍 Checking VERSION access:", versionId);
+
       if (!isUUID(versionId)) return res.status(400).json({ error: "Invalid version id" });
 
       const q = `
@@ -82,16 +143,27 @@ export default async function authorizeResource(req, res, next) {
       if (!rows.length) return res.status(404).json({ error: "Version not found" });
 
       if (!companyMatches(rows[0].company_id)) {
-        await auditLog({ user_id: user.id, action: "unauthorized_access", resource_type: "version", resource_id: versionId, success: false });
-        return res.status(403).json({ error: "Forbidden" });
+        await auditLog({
+        user_id: user.id,
+        action: "ACCESS_DENIED",
+        entity_type: "document",
+        entity_id: documentId,
+        meta: { reason: "company_mismatch" }
+      });
+
+        console.log("❌ VERSION ACCESS DENIED: User company", user.company_id, "≠", rows[0].company_id);
+        return accessDenied(res);
       }
 
       req.version = rows[0];
+      console.log("✅ VERSION ACCESS GRANTED");
       return next();
     }
 
     // 2) documentId
     if (documentId) {
+    console.log("🔍 Checking DOCUMENT access:", documentId);
+
       if (!isUUID(documentId)) return res.status(400).json({ error: "Invalid document id" });
 
       const q = `
@@ -105,46 +177,76 @@ export default async function authorizeResource(req, res, next) {
       if (!rows.length) return res.status(404).json({ error: "Document not found" });
 
       if (!companyMatches(rows[0].company_id)) {
-        await auditLog({ user_id: user.id, action: "unauthorized_access", resource_type: "document", resource_id: documentId, success: false });
-        return res.status(403).json({ error: "Forbidden" });
+        await auditLog({
+        user_id: user.id,
+        action: "ACCESS_DENIED",
+        entity_type: "document",
+        entity_id: documentId,
+        meta: { reason: "company_mismatch" }
+      });
+
+        console.log("❌ DOCUMENT ACCESS DENIED: User company", user.company_id, "≠", rows[0].company_id);
+        return accessDenied(res);
       }
 
       req.document = rows[0];
+      console.log("✅ DOCUMENT ACCESS GRANTED");
       return next();
     }
 
     // 3) folderId
-    if (folderId) {
-      if (!isUUID(folderId)) return res.status(400).json({ error: "Invalid folder id" });
+// 3) folderId
+if (folderId) {
+  console.log("🔍 Checking FOLDER access:", folderId);
 
-      const q = `
+  if (!isUUID(folderId)) return res.status(400).json({ error: "Invalid folder id" });
+
+  const q = `
         SELECT f.id AS folder_id, f.project_id, p.company_id
         FROM folders f
         JOIN projects p ON p.id = f.project_id
         WHERE f.id = $1
       `;
-      const { rows } = await pool.query(q, [folderId]);
-      if (!rows.length) return res.status(404).json({ error: "Folder not found" });
+  const { rows } = await pool.query(q, [folderId]);
+  if (!rows.length) return res.status(404).json({ error: "Folder not found" });
 
-      if (!companyMatches(rows[0].company_id)) {
-        await auditLog({ user_id: user.id, action: "unauthorized_access", resource_type: "folder", resource_id: folderId, success: false });
-        return res.status(403).json({ error: "Forbidden" });
-      }
+  if (!companyMatches(rows[0].company_id)) {
+    console.log("❌ FOLDER ACCESS DENIED: User company", user.company_id, "≠", rows[0].company_id);
+    await auditLog({
+      user_id: user.id,
+      action: "ACCESS_DENIED",
+      entity_type: "document",
+      entity_id: documentId,
+      meta: { reason: "company_mismatch" }
+    });
 
-      req.folder = rows[0];
-      return next();
-    }
+    return accessDenied(res);
+  }
+
+  req.folder = rows[0];
+  console.log("✅ FOLDER ACCESS GRANTED");
+  return next();
+}
 
     // 4) projectId
     if (projectId) {
+  console.log("🔍 Checking PROJECT access:", projectId);
       if (!isUUID(projectId)) return res.status(400).json({ error: "Invalid project id" });
 
       const { rows } = await pool.query(`SELECT id, company_id FROM projects WHERE id = $1`, [projectId]);
       if (!rows.length) return res.status(404).json({ error: "Project not found" });
 
       if (!companyMatches(rows[0].company_id)) {
-        await auditLog({ user_id: user.id, action: "unauthorized_access", resource_type: "project", resource_id: projectId, success: false });
-        return res.status(403).json({ error: "Forbidden" });
+        await auditLog({
+        user_id: user.id,
+        action: "ACCESS_DENIED",
+        entity_type: "document",
+        entity_id: documentId,
+        meta: { reason: "company_mismatch" }
+      });
+
+        console.log("❌ PROJECT ACCESS DENIED: User company", user.company_id, "≠", rows[0].company_id);
+        return accessDenied(res);
       }
 
       req.project = rows[0];
@@ -152,6 +254,7 @@ export default async function authorizeResource(req, res, next) {
     }
 
     // No resource ID found — allow
+    console.log("⚠️ No resource ID found → allow request.");
     return next();
   } catch (err) {
     console.error("authorizeResource error:", err);

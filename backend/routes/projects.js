@@ -71,10 +71,13 @@
 // export default router;
 
 
+
+
 // backend/routes/projects.js
 import express from "express";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { getMyProjects, getProjectById } from "../controllers/projectController.js";
+import authorizeResource from "../middleware/authorizeResource.js";
 import { pool } from "../db.js";
 
 const router = express.Router();
@@ -101,7 +104,10 @@ router.get("/", authMiddleware, getMyProjects);
    ⭐ API: Get single project by ID
    (Fixes FoldersPage 404 error and returns company_name)
 --------------------------------------------------- */
-router.get("/:projectId", authMiddleware, getProjectById);
+
+
+router.get("/:projectId", authMiddleware, authorizeResource, getProjectById);
+
 
 export default router;
 

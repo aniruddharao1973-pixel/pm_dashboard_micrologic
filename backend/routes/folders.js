@@ -65,24 +65,56 @@ router.get("/count", authMiddleware, async (req, res) => {
 
 // Get single folder info
 router.get("/info/:folderId",
+  (req, res, next) => {
+    console.log("🔥 HIT /folders/info/:folderId");
+    console.log("Params:", req.params);
+    next();
+  },
   authMiddleware,
-  authorizeResource,       // ⭐ enforcing folder-level security
+  authorizeResource,
   getFolderInfo
 );
 
+
 // Get subfolders
 router.get("/sub/:folderId",
+  (req, res, next) => {
+    console.log("🔥 HIT /folders/sub/:folderId");
+    console.log("Params:", req.params);
+    next();
+  },
   authMiddleware,
-  authorizeResource,       // ⭐ enforcing folder-level security
+  authorizeResource,
   getSubFolders
 );
 
+
 // Get all folders in a project
 router.get("/:projectId",
+  (req, res, next) => {
+    console.log("🔥 HIT /folders/:projectId");
+    console.log("Params:", req.params);
+    next();
+  },
   authMiddleware,
-  authorizeResource,       // ⭐ enforcing project-level security
+  authorizeResource,
   getFoldersByProject
 );
+
+
+
+// NEW: Correct route used by frontend
+router.get("/project/:projectId/folders",
+  (req, res, next) => {
+    console.log("🔥 HIT /folders/project/:projectId/folders");
+    console.log("Params:", req.params);
+    next();
+  },
+  authMiddleware,
+  authorizeResource,
+  getFoldersByProject
+);
+
 
 export default router;
 
