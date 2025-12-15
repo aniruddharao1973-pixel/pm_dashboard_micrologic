@@ -1,10 +1,11 @@
 // src/components/Sidebar.jsx
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useParams } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 const Sidebar = ({ sidebarOpen, onClose }) => {
   const { user, isAdminLike } = useAuth();
+  const { projectId } = useParams();
 
   // Used for link clicks and close button: do NOT prevent default so routing works.
   const handleClose = () => {
@@ -55,6 +56,15 @@ const Sidebar = ({ sidebarOpen, onClose }) => {
     },
 
     {
+      name: "Folder Access Control",
+      path: "#",
+      icon: "🔐",
+      color: "from-amber-500 to-orange-600",
+      dotColor: "bg-amber-400",
+      action: "open-folder-access",
+    },
+
+    {
       name: "Recycle Bin",
       path: "/recycle-bin",
       icon: "♻️",
@@ -81,7 +91,7 @@ const Sidebar = ({ sidebarOpen, onClose }) => {
 
     {
       name: "Recycle Bin",
-      path: "/customer/recycle-bin",   // ✅ FIX
+      path: "/customer/recycle-bin", // ✅ FIX
       icon: "♻️",
       color: "from-red-500 to-rose-600",
       dotColor: "bg-red-400",
@@ -157,38 +167,89 @@ const Sidebar = ({ sidebarOpen, onClose }) => {
         </div>
 
         {/* Navigation */}
+        {/* Navigation */}
         <nav className="flex flex-col gap-1.5 sm:gap-2 relative z-20">
-          {menu.map((item) => (
-            <NavLink
-              key={item.name}
-              to={item.path}
-              onClick={handleClose}
-              className={({ isActive }) =>
-                `group flex items-center justify-between px-3 sm:px-3.5 md:px-4 py-2.5 sm:py-3 md:py-3.5 rounded-lg sm:rounded-xl transition-all duration-300 relative overflow-hidden
-                 ${
-                   isActive
-                     ? `bg-gradient-to-r ${item.color} text-white shadow-lg ring-1 ring-white/30`
-                     : "bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:border-white/20 backdrop-blur-sm"
-                 }`
-              }
-            >
-              {/* Shimmer effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-all duration-700 pointer-events-none"></div>
+          {menu.map((item) =>
+            item.action === "open-folder-access" ? (
+              <button
+                key={item.name}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.dispatchEvent(
+                    new CustomEvent("open-folder-access-control", {
+                      detail: { projectId },
+                    })
+                  );
 
-              <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 relative z-30">
-                <span className="text-sm sm:text-base md:text-lg opacity-90">
-                  {item.icon}
-                </span>
-                <span className="font-medium text-xs sm:text-sm tracking-wide">
-                  {item.name}
-                </span>
-              </div>
+                  handleClose();
+                }}
+                className="
+          group flex items-center justify-between
+          px-3 sm:px-3.5 md:px-4
+          py-2.5 sm:py-3 md:py-3.5
+          rounded-lg sm:rounded-xl
+          transition-all duration-300
+          relative overflow-hidden
+          bg-white/5 text-white
+          border border-white/10
+          hover:bg-white/10 hover:border-white/20
+          backdrop-blur-sm
+        "
+              >
+                {/* Shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-all duration-700 pointer-events-none"></div>
 
-              <div
-                className={`h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full ${item.dotColor} opacity-80 group-hover:scale-125 transition-transform duration-300`}
-              />
-            </NavLink>
-          ))}
+                <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 relative z-30">
+                  <span className="text-sm sm:text-base md:text-lg opacity-90">
+                    {item.icon}
+                  </span>
+                  <span className="font-medium text-xs sm:text-sm tracking-wide">
+                    {item.name}
+                  </span>
+                </div>
+
+                <div
+                  className={`h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full ${item.dotColor} opacity-80 group-hover:scale-125 transition-transform duration-300`}
+                />
+              </button>
+            ) : (
+              <NavLink
+                key={item.name}
+                to={item.path}
+                onClick={handleClose}
+                className={({ isActive }) =>
+                  `group flex items-center justify-between
+           px-3 sm:px-3.5 md:px-4
+           py-2.5 sm:py-3 md:py-3.5
+           rounded-lg sm:rounded-xl
+           transition-all duration-300
+           relative overflow-hidden
+           ${
+             isActive
+               ? `bg-gradient-to-r ${item.color} text-white shadow-lg ring-1 ring-white/30`
+               : "bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:border-white/20 backdrop-blur-sm"
+           }`
+                }
+              >
+                {/* Shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-all duration-700 pointer-events-none"></div>
+
+                <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3 relative z-30">
+                  <span className="text-sm sm:text-base md:text-lg opacity-90">
+                    {item.icon}
+                  </span>
+                  <span className="font-medium text-xs sm:text-sm tracking-wide">
+                    {item.name}
+                  </span>
+                </div>
+
+                <div
+                  className={`h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full ${item.dotColor} opacity-80 group-hover:scale-125 transition-transform duration-300`}
+                />
+              </NavLink>
+            )
+          )}
         </nav>
 
         <div className="flex-1" />

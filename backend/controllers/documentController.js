@@ -24,6 +24,35 @@ import { insertEmailLog } from "../models/emailLogModel.js";
 export const uploadDocument = async (req, res) => {
   const { projectId, folderId, title, description, comment } = req.body;
 
+    // 🔒 CUSTOMER UPLOAD PERMISSION CHECK
+  if (req.user.role === "customer") {
+    const permRes = await pool.query(
+      `
+      SELECT customer_can_upload
+      FROM folders
+      WHERE id = $1
+        AND deleted_at IS NULL
+      `,
+      [folderId]
+    );
+
+    console.log("[UPLOAD CHECK]", {
+      role: req.user.role,
+      folderId,
+      perms: permRes.rows[0],
+    });
+
+    if (
+      permRes.rowCount === 0 ||
+      permRes.rows[0].customer_can_upload !== true
+    ) {
+      return res.status(403).json({
+        message: "Upload not allowed in this folder",
+      });
+    }
+  }
+
+
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded" });
   }
@@ -310,6 +339,19 @@ export const getDocumentVersions = async (req, res) => {
 ============================================================================ */
 export const deleteDocument = async (req, res) => {
   const documentId = req.params.documentId.trim();
+
+    // 🔒 CUSTOMER DELETE BLOCK (Recycle Bin not allowed)
+  if (req.user.role === "customer") {
+    console.log("[DELETE BLOCKED]", {
+      role: req.user.role,
+      documentId,
+    });
+
+    return res.status(403).json({
+      message: "Customers are not allowed to delete documents",
+    });
+  }
+
   console.log("🗑️ Recycle delete document:", {
     documentId,
     deletedBy: req.user.id,

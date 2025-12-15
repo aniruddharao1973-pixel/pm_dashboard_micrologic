@@ -8,10 +8,9 @@
 }
 
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;      /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
-
 
 /* Custom scrollbar that appears only during scroll */
 .scroll-appear {
@@ -36,8 +35,14 @@
 }
 
 @keyframes fadeIn {
-  0% { opacity: 0; transform: translateY(10px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fadeIn {
@@ -67,8 +72,6 @@
   position: relative !important;
 }
 
-
-
 /* from here starts new ////////////////////////////////////////////////////////////////////////////////////////////////////////////*
 
 
@@ -90,12 +93,9 @@ body {
 /* Smooth transitions for all elements */
 * {
   -webkit-tap-highlight-color: transparent;
-  transition: background-color 0.3s ease, 
-              border-color 0.3s ease, 
-              color 0.3s ease,
-              transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.3s ease,
-              box-shadow 0.3s ease;
+  transition: background-color 0.3s ease, border-color 0.3s ease,
+    color 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s ease, box-shadow 0.3s ease;
   box-sizing: border-box;
 }
 
@@ -109,7 +109,6 @@ body {
   transition: opacity 0.3s ease-in-out;
 }
 
-
 /* ===== SIDEBAR SPECIFIC FIXES ===== */
 
 /* Force GPU acceleration for smooth transforms */
@@ -121,11 +120,10 @@ body {
   will-change: transform, opacity;
 }
 
-
 /* Sidebar transition helpers (keeps element mounted while animating) */
 .sidebar-transition {
   transition: transform 280ms cubic-bezier(0.22, 0.9, 0.12, 1),
-              opacity 240ms cubic-bezier(0.22, 0.9, 0.12, 1);
+    opacity 240ms cubic-bezier(0.22, 0.9, 0.12, 1);
   will-change: transform, opacity;
 }
 
@@ -163,13 +161,19 @@ body {
 }
 
 /* sensible z-index utilities */
-.z-sidebar { z-index: 50; }
-.z-overlay { z-index: 40; }
+.z-sidebar {
+  z-index: 50;
+}
+.z-overlay {
+  z-index: 40;
+}
 
 /* ------- Optional compatibility: if you're still using Tailwind utility classes ------- */
 /* These make translate-x-0 / -translate-x-full animate smoothly without !important */
-.translate-x-0, .-translate-x-full {
-  transition: transform 280ms cubic-bezier(0.22, 0.9, 0.12, 1), opacity 240ms ease;
+.translate-x-0,
+.-translate-x-full {
+  transition: transform 280ms cubic-bezier(0.22, 0.9, 0.12, 1),
+    opacity 240ms ease;
   will-change: transform, opacity;
 }
 
@@ -180,7 +184,8 @@ body {
 
 /* Sidebar / overlay transitions (must exist exactly) */
 .sidebar-transition {
-  transition: transform 280ms cubic-bezier(0.22, 0.9, 0.12, 1), opacity 240ms cubic-bezier(0.22, 0.9, 0.12, 1);
+  transition: transform 280ms cubic-bezier(0.22, 0.9, 0.12, 1),
+    opacity 240ms cubic-bezier(0.22, 0.9, 0.12, 1);
   will-change: transform, opacity;
 }
 
@@ -213,14 +218,36 @@ body {
 }
 
 /* z helpers */
-.z-sidebar { z-index: 50; }
-.z-overlay { z-index: 40; }
+.z-sidebar {
+  z-index: 50;
+}
+.z-overlay {
+  z-index: 40;
+}
 
 /* small compatibility: make utility translate classes animate smoothly if still used */
-.translate-x-0, .-translate-x-full {
-  transition: transform 280ms cubic-bezier(0.22, 0.9, 0.12, 1), opacity 240ms ease;
+.translate-x-0,
+.-translate-x-full {
+  transition: transform 280ms cubic-bezier(0.22, 0.9, 0.12, 1),
+    opacity 240ms ease;
   will-change: transform, opacity;
 }
 .bg-black\/50 {
   transition: opacity 240ms cubic-bezier(0.22, 0.9, 0.12, 1);
+}
+
+/* request modal *
+
+/* Add to your global CSS or create a custom animation in tailwind.config.js */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
 }

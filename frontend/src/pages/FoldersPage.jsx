@@ -38,6 +38,7 @@ const FoldersPage = () => {
         res = await getFoldersByProject(projectId);
       }
 
+      console.log("Folders API response shape:", res.data);
       setFolders(res.data);
     } catch (err) {
       console.error("Error loading folders:", err);
@@ -79,22 +80,31 @@ const FoldersPage = () => {
     // re-run when projectId or folderId changes (folderId may be undefined for root)
   }, [projectId, folderId]);
 
-if (loading) {
-  return (
-    <div className="p-4 sm:p-6 md:p-8">
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="flex space-x-2">
-          <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-          <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-          <div className="w-3 h-3 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+  if (loading) {
+    return (
+      <div className="p-4 sm:p-6 md:p-8">
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="flex space-x-2">
+            <div
+              className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
+              style={{ animationDelay: "0ms" }}
+            ></div>
+            <div
+              className="w-3 h-3 bg-purple-500 rounded-full animate-bounce"
+              style={{ animationDelay: "150ms" }}
+            ></div>
+            <div
+              className="w-3 h-3 bg-blue-600 rounded-full animate-bounce"
+              style={{ animationDelay: "300ms" }}
+            ></div>
+          </div>
+          <p className="mt-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 text-base sm:text-lg font-semibold">
+            Loading folders...
+          </p>
         </div>
-        <p className="mt-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 text-base sm:text-lg font-semibold">
-          Loading folders...
-        </p>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   const handleFolderClick = async (folder) => {
     // 1️⃣ Explicit rule for Documents folder

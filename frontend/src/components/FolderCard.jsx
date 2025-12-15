@@ -33,24 +33,24 @@
 // <div
 //   onClick={onClick}
 //   className="
-//     cursor-pointer 
-//     bg-white 
-//     border border-gray-200 
-//     rounded-2xl 
-//     p-5 
-//     shadow-sm 
-//     hover:shadow-lg 
-//     hover:-translate-y-1 
+//     cursor-pointer
+//     bg-white
+//     border border-gray-200
+//     rounded-2xl
+//     p-5
+//     shadow-sm
+//     hover:shadow-lg
+//     hover:-translate-y-1
 //     transition-all duration-300
 //   "
 // >
 //   {/* Folder Icon */}
 //   <div
 //     className="
-//       h-12 w-12 
-//       rounded-xl 
+//       h-12 w-12
+//       rounded-xl
 //       bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600
-//       flex items-center justify-center 
+//       flex items-center justify-center
 //       shadow-md
 //     "
 //   >
@@ -86,8 +86,6 @@
 
 // export default FolderCard;
 
-
-
 // src/components/FolderCard.jsx
 import React from "react";
 
@@ -99,7 +97,7 @@ const FolderCard = ({ folder, onClick }) => {
     "from-teal-500 to-teal-600",
     "from-pink-500 to-pink-600",
   ];
-  
+
   // Convert UUID → numeric hash
   const hashString = (str) => {
     let hash = 0;
@@ -112,11 +110,16 @@ const FolderCard = ({ folder, onClick }) => {
   const color = colors[hashString(folder.id) % colors.length];
 
   const formatDate = (dateString) => {
+    if (!dateString) return "—";
+
     const d = new Date(dateString);
-    const day = d.getDate();
-    const month = d.getMonth() + 1;
+    if (isNaN(d.getTime())) return "—";
+
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
     const year = d.getFullYear();
-    return `${day}/${month}/${year}`; // DD/MM/YYYY
+
+    return `${day}/${month}/${year}`;
   };
 
   return (

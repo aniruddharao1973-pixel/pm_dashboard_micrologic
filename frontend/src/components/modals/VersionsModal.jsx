@@ -1,4 +1,3 @@
-
 // src/components/modals/VersionsModal.jsx
 import React, { useState, useEffect } from "react";
 import { formatDate } from "../../utils/formatDate";
@@ -13,7 +12,13 @@ import {
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-const VersionsModal = ({ document: doc, versions = [], onClose, onRefresh }) => {
+const VersionsModal = ({
+  document: doc,
+  versions = [],
+  canDownload,
+  onClose,
+  onRefresh,
+}) => {
   if (!doc) return null;
 
   const user = JSON.parse(localStorage.getItem("user"));
@@ -36,8 +41,6 @@ const VersionsModal = ({ document: doc, versions = [], onClose, onRefresh }) => 
     setLocalVersions(versions);
   }, [versions]);
 
-
-
   const toggleRow = (id) => {
     setExpandedRow(expandedRow === id ? null : id);
   };
@@ -45,7 +48,6 @@ const VersionsModal = ({ document: doc, versions = [], onClose, onRefresh }) => 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
       <div className="w-[90%] max-w-5xl rounded-2xl shadow-2xl overflow-hidden bg-gradient-to-br from-white/90 to-amber-50/90 border border-amber-200 backdrop-blur-xl">
-
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-4 bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-600">
           <h2 className="text-xl font-extrabold text-white drop-shadow-lg tracking-wide">
@@ -62,7 +64,6 @@ const VersionsModal = ({ document: doc, versions = [], onClose, onRefresh }) => 
 
         {/* Body */}
         <div className="p-5 max-h-[70vh] overflow-y-auto custom-scrollbar">
-
           {localVersions.length === 0 ? (
             <p className="text-gray-600 text-center py-8 text-lg font-semibold">
               No versions found.
@@ -77,14 +78,11 @@ const VersionsModal = ({ document: doc, versions = [], onClose, onRefresh }) => 
                   <th className="p-3">Uploaded By</th>
                   <th className="p-3">Summary</th>
                   <th className="p-3 text-center w-10"></th>
-
                 </tr>
               </thead>
 
               <tbody>
                 {paginatedVersions.map((v, index) => {
-
-
                   const isLatest = v.version_number === doc.current_version;
                   const isExpanded = expandedRow === v.id;
 
@@ -112,12 +110,13 @@ const VersionsModal = ({ document: doc, versions = [], onClose, onRefresh }) => 
 
                         <td className="p-3">{formatDate(v.created_at)}</td>
 
-                        <td className="p-3">{v.uploaded_by_name || "Unknown"}</td>
+                        <td className="p-3">
+                          {v.uploaded_by_name || "Unknown"}
+                        </td>
 
                         <td className="p-3 italic">
                           {v.upload_comment ? `“${v.upload_comment}”` : "-"}
                         </td>
-
 
                         {/* ACTION BUTTONS */}
                         <td
@@ -125,18 +124,22 @@ const VersionsModal = ({ document: doc, versions = [], onClose, onRefresh }) => 
                           onClick={(e) => e.stopPropagation()} // prevent expanding
                         >
                           {/* DOWNLOAD BUTTON */}
-                          {(user.role === "admin" || user.role === "techsales" || doc.can_download) ? (
+                          {canDownload ? (
                             <button
                               onClick={async () => {
                                 try {
                                   const url = `${API_BASE}/api/documents/download/${v.id}`;
                                   const response = await axios.get(url, {
                                     responseType: "blob",
-                                    headers: { Authorization: `Bearer ${token}` },
+                                    headers: {
+                                      Authorization: `Bearer ${token}`,
+                                    },
                                   });
 
                                   const filename =
-                                    v.original_filename || v.filename || "file.pdf";
+                                    v.original_filename ||
+                                    v.filename ||
+                                    "file.pdf";
 
                                   const blob = new Blob([response.data]);
                                   const link = document.createElement("a");
@@ -144,20 +147,36 @@ const VersionsModal = ({ document: doc, versions = [], onClose, onRefresh }) => 
                                   link.download = filename;
                                   link.click();
                                 } catch (err) {
-                                  Swal.fire("Error", "Unable to download file", "error");
+                                  alert("Unable to download file");
                                 }
                               }}
-                              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-lg shadow hover:scale-105 transition"
+                              className="
+                              flex items-center gap-2
+                              px-4 py-2
+                              bg-gradient-to-r from-blue-500 to-indigo-600
+                              text-white font-semibold
+                              rounded-lg shadow
+                              hover:scale-105 transition
+                            "
+                              title="Download file"
                             >
                               <ArrowDownTrayIcon className="h-5 w-5" />
                               Download
                             </button>
                           ) : (
-                            <span className="px-3 py-1 bg-gray-300 text-gray-600 rounded">
-                              No Download
-                            </span>
+                            <div
+                              className="
+                              flex items-center justify-center
+                              px-4 py-2
+                              bg-gray-200 text-gray-500
+                              rounded-lg
+                              cursor-not-allowed
+                            "
+                              title="Download not allowed for this folder"
+                            >
+                              🚫 No Download
+                            </div>
                           )}
-
                         </td>
 
                         {/* Expand / Collapse Icon */}
@@ -175,13 +194,13 @@ const VersionsModal = ({ document: doc, versions = [], onClose, onRefresh }) => 
                         <tr className="bg-gray-50 border-b transition-all duration-300">
                           <td></td>
                           <td colSpan={5} className="p-5 space-y-5 text-sm">
-                          
-
                             {/* CHANGE LOG */}
                             {v.change_log &&
                               v.change_log.changes?.length > 0 && (
                                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                  <p className="text-blue-700 font-semibold">Detected Changes:</p>
+                                  <p className="text-blue-700 font-semibold">
+                                    Detected Changes:
+                                  </p>
 
                                   {v.change_log.changed_by && (
                                     <p className="text-gray-700 mt-1">
@@ -277,7 +296,9 @@ const VersionsModal = ({ document: doc, versions = [], onClose, onRefresh }) => 
           {totalPages > 1 && (
             <div className="flex justify-center items-center gap-3 mt-4">
               <button
-                onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+                onClick={() =>
+                  currentPage > 1 && setCurrentPage(currentPage - 1)
+                }
                 className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
               >
                 Prev

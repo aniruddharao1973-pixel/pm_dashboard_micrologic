@@ -1,19 +1,23 @@
-
-
-
 // src/components/FileCard.jsx
 import React from "react";
 import { getFileIcon } from "../utils/fileIcons";
 import { formatDate } from "../utils/formatDate";
 
-const FileCard = ({ document, user, onView, onDelete, onVersions }) => {
+const FileCard = ({
+  document,
+  user,
+  onView,
+  onDelete,
+  onVersions,
+  canView,
+  canDelete,
+}) => {
   // Extract file extension
   const fileType = document.filename
     ? document.filename.split(".").pop().toUpperCase()
     : "UNKNOWN";
 
   const Icon = getFileIcon(fileType);
-
 
   // Icon color palette
   const colors = [
@@ -51,7 +55,6 @@ const FileCard = ({ document, user, onView, onDelete, onVersions }) => {
       "
     >
       <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
-
         {/* File Icon */}
         <div
           className={`
@@ -84,68 +87,126 @@ const FileCard = ({ document, user, onView, onDelete, onVersions }) => {
 
           {/* File Type Badge */}
           <div className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white rounded-md sm:rounded-lg shadow-md border-2 border-amber-200">
-            <span className="text-[10px] sm:text-xs font-bold text-orange-700">{fileType}</span>
+            <span className="text-[10px] sm:text-xs font-bold text-orange-700">
+              {fileType}
+            </span>
           </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 w-full">
-
           {/* TITLE + STATUS */}
           <div className="mb-2 sm:mb-3">
             <h3 className="text-base sm:text-xl font-bold text-gray-800 group-hover:text-orange-700 transition-colors line-clamp-2 mb-2">
-              {document.original_filename || document.filename || document.title}
+              {document.original_filename ||
+                document.filename ||
+                document.title}
             </h3>
-
           </div>
 
           {/* ACTION BUTTONS */}
           <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-
             {/* View */}
-            <button
-              onClick={onView}
-              className="
-                p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-to-r from-blue-100 to-indigo-100 
-                text-blue-600 hover:text-blue-800
-                border-2 border-blue-300
-                shadow-md hover:shadow-lg hover:shadow-blue-300
-                transition-all duration-300
+            {canView ? (
+              <button
+                onClick={onView}
+                className="
+      p-1.5 sm:p-2 rounded-lg sm:rounded-xl
+      bg-gradient-to-r from-blue-100 to-indigo-100 
+      text-blue-600 hover:text-blue-800
+      border-2 border-blue-300
+      shadow-md hover:shadow-lg hover:shadow-blue-300
+      transition-all duration-300
+    "
+                title="View File"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 sm:h-5 sm:w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5
+           c4.478 0 8.268 2.943 9.542 7
+           -1.274 4.057-5.064 7-9.542 7
+           -4.477 0-8.268-2.943-9.542-7z"
+                  />
+                </svg>
+              </button>
+            ) : (
+              <div
+                className="
+                p-1.5 sm:p-2 rounded-lg sm:rounded-xl
+                bg-gray-100
+                text-gray-400
+                border-2 border-gray-300
+                cursor-not-allowed
+                flex items-center justify-center
               "
-              title="View File"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none"
-                viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 
-                    9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </button>
+                title="View not allowed for this folder"
+              >
+                <span className="text-sm sm:text-base">🚫</span>
+              </div>
+            )}
 
             {/* Delete */}
-            <button
-              onClick={onDelete}
-              className="
-                p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-to-r from-red-100 to-rose-100 
-                text-red-600 hover:text-red-800
-                border-2 border-red-300
-                shadow-md hover:shadow-lg hover:shadow-red-300
-                transition-all duration-300
-              "
-              title="Delete Document"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none"
-                viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862
-                    a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6
-                    m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3
-                    M4 7h16" />
-              </svg>
-            </button>
-
+            {canDelete ? (
+              <button
+                onClick={onDelete}
+                className="
+                  p-1.5 sm:p-2 rounded-lg sm:rounded-xl
+                  bg-gradient-to-r from-red-100 to-rose-100 
+                  text-red-600 hover:text-red-800
+                  border-2 border-red-300
+                  shadow-md hover:shadow-lg hover:shadow-red-300
+                  transition-all duration-300
+                "
+                title="Delete Document"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 sm:h-5 sm:w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862
+                      a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6
+                      m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3
+                      M4 7h16"
+                  />
+                </svg>
+              </button>
+            ) : (
+              <div
+                className="
+                  p-1.5 sm:p-2 rounded-lg sm:rounded-xl
+                  bg-red-50
+                  text-red-400
+                  border-2 border-red-200
+                  cursor-not-allowed
+                  flex items-center justify-center
+                "
+                title="Delete not allowed for this folder"
+              >
+                <span className="text-sm sm:text-base">🚫</span>
+              </div>
+            )}
           </div>
 
           {/* Information Grid */}
@@ -186,27 +247,46 @@ const FileCard = ({ document, user, onView, onDelete, onVersions }) => {
                 transition-all duration-300
               "
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4"
-                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-3 w-3 sm:h-4 sm:w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 
-                     9 9 0 0118 0z" />
+                     9 9 0 0118 0z"
+                />
               </svg>
               <span className="hidden sm:inline">View Version History →</span>
               <span className="sm:hidden">Version History</span>
             </button>
 
             <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-amber-600 font-medium mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-amber-200">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0"
-                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 
                      0 002-2V7a2 2 0 00-2-2H5a2 2 
-                     0 00-2 2v12a2 2 0 002 2z" />
+                     0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
-              <span className="truncate">Uploaded: {formatDate(document.created_at)}</span>
+              <span className="truncate">
+                Uploaded: {formatDate(document.created_at)}
+              </span>
             </div>
-
           </div>
         </div>
       </div>

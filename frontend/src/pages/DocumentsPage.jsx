@@ -27,15 +27,14 @@ const DocumentsPage = () => {
   const { projectId, folderId } = useParams();
   const safeFolderId = folderId && folderId !== "0" ? folderId : 0;
 
-    console.log("DocumentsPage params:", {
+  console.log("DocumentsPage params:", {
     projectId,
     folderId,
     safeFolderId,
   });
 
   const { getSubFolders, getFolderById } = useFoldersApi();
-  const { getDocumentsByFolder, getDocumentVersions, toggleDownload } =
-    useDocumentsApi();
+  const { getDocumentsByFolder, getDocumentVersions } = useDocumentsApi();
 
   const { getProjectById } = useProjectsApi();
   const { getCustomer } = useAdminApi();
@@ -45,7 +44,6 @@ const DocumentsPage = () => {
   // ⭐ Breadcrumb states
   const [projectName, setProjectName] = useState("");
   const [customerName, setCustomerName] = useState("");
-  const [folderName, setFolderName] = useState("");
 
   // Build full folder path hierarchy (parent → child)
   const [folderChain, setFolderChain] = useState([]);
@@ -53,6 +51,7 @@ const DocumentsPage = () => {
   const loadFolderHierarchy = async () => {
     if (safeFolderId === 0) {
       setFolderChain([]);
+      setFolderPerms(null);
       return;
     }
 
@@ -60,10 +59,15 @@ const DocumentsPage = () => {
       let currentId = safeFolderId;
       const path = [];
 
+      // Load current folder (this contains permissions)
+      const currentRes = await getFolderById(currentId);
+      const currentFolder = currentRes.data;
+
+      setFolderPerms(currentFolder);
+
       while (currentId) {
         const res = await getFolderById(currentId);
         const folder = res.data;
-
         if (!folder) break;
 
         path.unshift(folder);
@@ -78,6 +82,13 @@ const DocumentsPage = () => {
 
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [folderPerms, setFolderPerms] = useState(null);
+
+  const isCustomer = user.role === "customer";
+  const canCustomerUpload =
+    !isCustomer ||
+    safeFolderId === 0 ||
+    folderPerms?.customer_can_upload === true;
 
   const [uploadOpen, setUploadOpen] = useState(false);
 
@@ -113,9 +124,6 @@ const DocumentsPage = () => {
       }
 
       // Folder name if provided by API
-      if (documents.length > 0 && documents[0].folder_name) {
-        setFolderName(documents[0].folder_name);
-      }
     } catch (err) {
       console.error("Breadcrumb Load Error:", err);
     }
@@ -157,7 +165,7 @@ const DocumentsPage = () => {
   useEffect(() => {
     loadBreadcrumbData();
     loadFolderHierarchy();
-  }, [documents]);
+  }, [safeFolderId]);
 
   const scrollRef = React.useRef(null);
 
@@ -357,38 +365,41 @@ const DocumentsPage = () => {
         </div>
 
         {/* Upload button - Fully Responsive */}
-        <button
-          onClick={() => setUploadOpen(true)}
-          className="
-            group relative 
-            w-full lg:w-auto
-            flex items-center justify-center 
-            gap-1.5 sm:gap-2 md:gap-3
-            px-3 sm:px-4 md:px-6 lg:px-8 
-            py-2 sm:py-2.5 md:py-3
-            bg-gradient-to-r from-green-500 via-emerald-500 to-green-600
-            text-white font-bold 
-            text-xs sm:text-sm md:text-base
-            rounded-md sm:rounded-lg md:rounded-xl
-            shadow-lg shadow-green-500/30
-            hover:shadow-xl hover:shadow-emerald-500/40
-            hover:scale-105
-            active:scale-95
-            transition-all duration-300
-            overflow-hidden
-            min-h-[36px] sm:min-h-[40px] md:min-h-[44px]
-          "
-        >
+        {canCustomerUpload ? (
+          <button
+            onClick={() => setUploadOpen(true)}
+            className="
+              group relative 
+              w-full lg:w-auto
+              flex items-center justify-center 
+              gap-1.5
+              px-4 py-2.5
+              bg-gradient-to-r from-green-500 via-emerald-500 to-green-600
+              text-white font-bold
+              rounded-lg
+              shadow-lg hover:scale-105 transition
+            "
+          >
+            <span className="text-lg">+</span>
+            <span>Upload Document</span>
+          </button>
+        ) : (
           <div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 
-            -translate-x-full group-hover:translate-x-full transition-transform duration-700"
-          ></div>
-
-          <span className="text-base sm:text-lg md:text-xl relative z-10">
-            +
-          </span>
-          <span className="relative z-10">Upload Document</span>
-        </button>
+            className="
+              w-full lg:w-auto
+              flex items-center justify-center gap-2
+              px-4 py-2.5
+              bg-red-50 border-2 border-red-300
+              rounded-lg
+              text-red-700 font-semibold
+              cursor-not-allowed
+            "
+            title="Upload not allowed in this folder"
+          >
+            <span className="text-xl">🚫</span>
+            <span>Upload Disabled for This Folder</span>
+          </div>
+        )}
       </div>
 
       {/* DOCUMENTS SECTION - Fully Responsive */}
@@ -505,6 +516,14 @@ const DocumentsPage = () => {
                     <FileCard
                       document={doc}
                       user={user}
+                      canView={
+                        user.role !== "customer" ||
+                        folderPerms?.customer_can_view === true
+                      }
+                      canDelete={
+                        user.role !== "customer" ||
+                        folderPerms?.customer_can_delete === true
+                      }
                       onView={async () => {
                         try {
                           // Load all versions
@@ -571,9 +590,14 @@ const DocumentsPage = () => {
         <VersionsModal
           document={versionsFile}
           versions={versionList}
+          canDownload={
+            user.role !== "customer" ||
+            folderPerms?.customer_can_download === true
+          }
           onClose={() => setVersionsFile(null)}
         />
       )}
+
       {renameFile && (
         <RenameModal
           document={renameFile}

@@ -5,14 +5,23 @@ The system supports role-based access (Admin, Tech Sales, Customer), document ma
 
 Project Structure
 pm_dashboard_micrologic/
+<<<<<<< HEAD
 ├── backend/        # Node.js + Express API
 ├── frontend/       # React (Vite) application
+=======
+├── backend/ # Node.js + Express API
+├── frontend/ # React (Vite) application
+>>>>>>> 7f3b888 (updated frontend and backend v8)
 ├── .gitignore
 └── README.md
 
 Tech Stack
 
 Backend
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7f3b888 (updated frontend and backend v8)
 - Node.js
 - Express.js
 - PostgreSQL
@@ -22,6 +31,7 @@ Backend
 - Socket.IO
 
 Frontend
+
 - React
 - Vite
 - Tailwind CSS
@@ -29,6 +39,8 @@ Frontend
 - React Router
 
 Prerequisites
+
+>>>>>>> 7f3b888 (updated frontend and backend v8)
 - Node.js 18+
 - npm
 - PostgreSQL
@@ -55,6 +67,8 @@ Environment Variables
 Environment files are required and are not committed.
 
 Backend (backend/.env)
+
+>>>>>>> 7f3b888 (updated frontend and backend v8)
 - PORT
 - DATABASE_URL
 - JWT_SECRET
@@ -67,12 +81,20 @@ Frontend (frontend/.env)
 - VITE_API_BASE_URL
 
 Notes
+
+- VITE_API_BASE_URL
+
+Notes
+
+>>>>>>> 7f3b888 (updated frontend and backend v8)
 - node_modules are excluded from Git
 - Run npm install after cloning
 - Do not commit .env files
 - Uploaded files are stored in backend/uploads
 
 Security
+
+>>>>>>> 7f3b888 (updated frontend and backend v8)
 - Role-based access control
 - Resource-level authorization
 - URL tampering protection
