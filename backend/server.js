@@ -90,7 +90,6 @@ import documentRoutes from "./routes/documents.js";
 import projectRoutes from "./routes/projects.js";
 import folderRoutes from "./routes/folders.js";
 import dashboardRoutes from "./routes/dashboard.js";
-import approvalsRoutes from "./routes/approvals.js";
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
@@ -98,7 +97,6 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/folders", folderRoutes);
 app.use("/api/documents", documentRoutes);    // includes comments inside documents.js
 app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/approvals", approvalsRoutes);
 
 /* ============================================================
    HEALTH CHECK

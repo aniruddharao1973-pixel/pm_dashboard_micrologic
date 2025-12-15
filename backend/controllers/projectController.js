@@ -1,44 +1,3 @@
-// // backend/controllers/projectController.js
-// import { pool } from "../db.js";
-
-// // Get projects for logged-in customer/admin
-// export const getMyProjects = async (req, res) => {
-//   try {
-//     const userId = req.user.id;
-//     const role = req.user.role;
-
-//     let result;
-
-//     if (role === "admin") {
-//       // Admin sees all projects
-//       result = await pool.query(
-//         `SELECT p.*, u.name AS customer_name
-//          FROM projects p
-//          LEFT JOIN users u ON p.customer_id = u.id
-//          ORDER BY p.created_at DESC`
-//       );
-//     } else {
-//       // Customer sees ONLY their projects
-//       result = await pool.query(
-//         `SELECT p.*
-//          FROM projects p
-//          WHERE p.customer_id = $1
-//          ORDER BY p.created_at DESC`,
-//         [userId]
-//       );
-//     }
-
-//     res.json(result.rows);
-
-//   } catch (error) {
-//     console.error("Get My Projects Error:", error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
-
-
-
-
 // backend/controllers/projectController.js
 import { pool } from "../db.js";
 
@@ -60,7 +19,6 @@ export const getMyProjects = async (req, res) => {
          LEFT JOIN companies c ON p.company_id = c.id
          ORDER BY p.created_at DESC`
       );
-
     } else {
       // ⭐ Customer → fetch THEIR company first
       const companyRes = await pool.query(
@@ -88,7 +46,6 @@ export const getMyProjects = async (req, res) => {
     }
 
     res.json(result.rows);
-
   } catch (error) {
     console.error("Get My Projects Error:", error);
     res.status(500).json({ message: "Server error" });
@@ -115,7 +72,6 @@ export const getProjectById = async (req, res) => {
     }
 
     res.json(result.rows[0]);
-
   } catch (error) {
     console.error("Get Project By ID Error:", error);
     res.status(500).json({ message: "Server error" });

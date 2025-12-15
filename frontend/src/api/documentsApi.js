@@ -1,6 +1,3 @@
-
-
-
 // src/api/documentsApi.js
 import { useAxios } from "./axios";
 
@@ -24,22 +21,10 @@ export const useDocumentsApi = () => {
   const getDocumentVersions = (documentId) =>
     api.get(`/documents/${documentId}/versions`);
 
-  const deleteDocument = (documentId) =>
-    api.delete(`/documents/${documentId}`);
+  const deleteDocument = (documentId) => api.delete(`/documents/${documentId}`);
 
   const toggleDownload = (documentId, canDownload) =>
     api.patch(`/documents/${documentId}/toggle-download`, { canDownload });
-
-  /*
-  =========================================
-    FINAL APPROVAL WORKFLOW (Version Based)
-  =========================================
-  */
-  const approveVersion = (versionId, comment) =>
-    api.post(`/approvals/${versionId}/approve`, { comment });
-
-  const rejectVersion = (versionId, comment) =>
-    api.post(`/approvals/${versionId}/reject`, { comment });
 
   /*
   =========================================
@@ -63,6 +48,24 @@ export const useDocumentsApi = () => {
   const updateDocumentNotes = (documentId, notes) =>
     api.put(`/documents/${documentId}/notes`, { notes });
 
+  /*
+=========================================
+ RECYCLE BIN / RESTORE
+=========================================
+*/
+  const getAdminRecycleBinDocuments = () => api.get("/documents/recycle-bin");
+
+  const getCustomerRecycleBinDocuments = () =>
+    api.get("/documents/recycle-bin/customer");
+
+  // Customer → request restore
+  const requestRestore = (documentId) =>
+    api.post(`/documents/${documentId}/request-restore`);
+
+  // Admin / TechSales → restore
+  const restoreDocument = (documentId) =>
+    api.post(`/documents/${documentId}/restore`);
+
   return {
     uploadDocument,
     getDocumentsByFolder,
@@ -70,9 +73,11 @@ export const useDocumentsApi = () => {
     deleteDocument,
     toggleDownload,
 
-    // APPROVALS
-    approveVersion,
-    rejectVersion,
+    // RECYCLE BIN
+    getAdminRecycleBinDocuments,
+    getCustomerRecycleBinDocuments,
+    requestRestore,
+    restoreDocument,
 
     // COMMENTS
     getComments,

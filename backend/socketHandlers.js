@@ -74,22 +74,6 @@ export function registerSocketHandlers(io) {
       });
     });
 
-    /*
-     * APPROVAL ACTION
-     */
-    socket.on("approval_action", ({ documentId, approvalId, action, by }) => {
-      const room = `document_${documentId}`;
-
-      io.to(room).emit("approval_updated", {
-        documentId,
-        approvalId,
-        action,
-        by,
-        timestamp: new Date().toISOString(),
-      });
-
-      console.log(`📄 Approval update: ${action} by ${by}`);
-    });
 
     /*
      * DISCONNECT

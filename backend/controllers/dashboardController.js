@@ -1,172 +1,33 @@
-// import { pool } from "../db.js";
-
-// // ⭐ Admin sees all
-// export const getAdminStats = async (req, res) => {
-//   if (req.user.role !== "admin") {
-//     return res.status(403).json({ message: "Access denied" });
-//   }
-
-//   try {
-//     const projectCount = await pool.query("SELECT COUNT(*) FROM projects");
-//     const documentCount = await pool.query("SELECT COUNT(*) FROM documents");
-//     const folderCount = await pool.query("SELECT COUNT(*) FROM folders");
-
-//     res.json({
-//       totalProjects: Number(projectCount.rows[0].count),
-//       totalDocuments: Number(documentCount.rows[0].count),
-//       totalFolders: Number(folderCount.rows[0].count),
-//     });
-//   } catch (err) {
-//     console.error("Admin stats error:", err);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
-
-
-
-// // ⭐ Customer sees only THEIR data
-// export const getCustomerStats = async (req, res) => {
-//   const userId = req.user.id;
-
-//   try {
-//     const projectCount = await pool.query(
-//       `SELECT COUNT(*) FROM projects WHERE customer_id = $1`,
-//       [userId]
-//     );
-
-//     const folderCount = await pool.query(
-//       `SELECT COUNT(*) FROM folders WHERE project_id IN (
-//          SELECT id FROM projects WHERE customer_id = $1
-//        )`,
-//       [userId]
-//     );
-
-//     const documentCount = await pool.query(
-//       `SELECT COUNT(*) FROM documents WHERE folder_id IN (
-//          SELECT id FROM folders WHERE project_id IN (
-//            SELECT id FROM projects WHERE customer_id = $1
-//          )
-//        )`,
-//       [userId]
-//     );
-
-//     res.json({
-//       totalProjects: Number(projectCount.rows[0].count),
-//       totalFolders: Number(folderCount.rows[0].count),
-//       totalDocuments: Number(documentCount.rows[0].count),
-//     });
-
-//   } catch (error) {
-//     console.error("Customer Dashboard Error:", error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
-
-
-// // backend/controllers/dashboardController.js
-// import { pool } from "../db.js";
-
-// // ⭐ Admin sees all
-// export const getAdminStats = async (req, res) => {
-//   if (req.user.role !== "admin") {
-//     return res.status(403).json({ message: "Access denied" });
-//   }
-
-//   try {
-//     const projectCount = await pool.query("SELECT COUNT(*) FROM projects");
-//     const documentCount = await pool.query("SELECT COUNT(*) FROM documents");
-//     const folderCount = await pool.query("SELECT COUNT(*) FROM folders");
-//     const customerCount = await pool.query(
-//       "SELECT COUNT(*) FROM users WHERE role = 'customer'"
-//     );
-
-//     res.json({
-//       totalCustomers: Number(customerCount.rows[0].count),
-//       totalProjects: Number(projectCount.rows[0].count),
-//       totalDocuments: Number(documentCount.rows[0].count),
-//       totalFolders: Number(folderCount.rows[0].count),
-//     });
-
-//   } catch (err) {
-//     console.error("Admin stats error:", err);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
-
-
-// // ⭐ Customer sees only THEIR data
-// export const getCustomerStats = async (req, res) => {
-//   const userId = req.user.id;
-
-//   try {
-//     const projectCount = await pool.query(
-//       `SELECT COUNT(*) FROM projects WHERE customer_id = $1`,
-//       [userId]
-//     );
-
-//     const folderCount = await pool.query(
-//       `SELECT COUNT(*) FROM folders 
-//        WHERE project_id IN (
-//          SELECT id FROM projects WHERE customer_id = $1
-//        )`,
-//       [userId]
-//     );
-
-//     const documentCount = await pool.query(
-//       `SELECT COUNT(*) FROM documents 
-//        WHERE folder_id IN (
-//          SELECT id FROM folders WHERE project_id IN (
-//            SELECT id FROM projects WHERE customer_id = $1
-//          )
-//        )`,
-//       [userId]
-//     );
-
-//     res.json({
-//       totalProjects: Number(projectCount.rows[0].count),
-//       totalFolders: Number(folderCount.rows[0].count),
-//       totalDocuments: Number(documentCount.rows[0].count),
-//     });
-
-//   } catch (error) {
-//     console.error("Customer Dashboard Error:", error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
-
-
-
-
-
-
 // backend/controllers/dashboardController.js
 import { pool } from "../db.js";
 
 /* ============================================================
-   ⭐ ADMIN DASHBOARD — See ALL Stats
-   Count COMPANY records, not users.
+   ⭐ ADMIN DASHBOARD — See ALL ACTIVE Stats (NO deleted data)
    ============================================================ */
 export const getAdminStats = async (req, res) => {
-  // Allow admin OR techsales
   if (req.user.role !== "admin" && req.user.role !== "techsales") {
     return res.status(403).json({ message: "Access denied" });
   }
 
   try {
-    const customerCount = await pool.query(
-      "SELECT COUNT(*) FROM companies"
-    );
+    const customerCount = await pool.query(`SELECT COUNT(*) FROM companies`);
 
     const projectCount = await pool.query(
-      "SELECT COUNT(*) FROM projects"
+      `SELECT COUNT(*) 
+       FROM projects 
+       WHERE deleted_at IS NULL`
     );
 
     const folderCount = await pool.query(
-      "SELECT COUNT(*) FROM folders"
+      `SELECT COUNT(*) 
+       FROM folders 
+       WHERE deleted_at IS NULL`
     );
 
     const documentCount = await pool.query(
-      "SELECT COUNT(*) FROM documents"
+      `SELECT COUNT(*) 
+       FROM documents 
+       WHERE deleted_at IS NULL`
     );
 
     res.json({
@@ -175,23 +36,19 @@ export const getAdminStats = async (req, res) => {
       totalFolders: Number(folderCount.rows[0].count),
       totalDocuments: Number(documentCount.rows[0].count),
     });
-
   } catch (err) {
     console.error("Admin stats error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-
-
 /* ============================================================
-   ⭐ CUSTOMER DASHBOARD — Only see their own company data
+   ⭐ CUSTOMER DASHBOARD — Only ACTIVE company data
    ============================================================ */
 export const getCustomerStats = async (req, res) => {
   const userId = req.user.id;
 
   try {
-    // 1️⃣ Get user's company
     const companyRes = await pool.query(
       `SELECT company_id 
        FROM user_companies 
@@ -202,38 +59,38 @@ export const getCustomerStats = async (req, res) => {
     if (companyRes.rows.length === 0) {
       return res.json({
         totalProjects: 0,
-        totalDocuments: 0
+        totalDocuments: 0,
       });
     }
 
     const companyId = companyRes.rows[0].company_id;
 
-    // 2️⃣ Count projects belonging to the company
     const projectCount = await pool.query(
       `SELECT COUNT(*) 
        FROM projects 
-       WHERE company_id = $1`,
+       WHERE company_id = $1
+         AND deleted_at IS NULL`,
       [companyId]
     );
 
-    // 3️⃣ Count documents for all folders of this company
     const documentCount = await pool.query(
-      `SELECT COUNT(*) 
-       FROM documents 
-       WHERE folder_id IN (
-         SELECT id FROM folders 
-         WHERE project_id IN (
-           SELECT id FROM projects WHERE company_id = $1
-         )
-       )`,
+      `
+      SELECT COUNT(*) 
+      FROM documents d
+      JOIN folders f ON f.id = d.folder_id
+      JOIN projects p ON p.id = f.project_id
+      WHERE p.company_id = $1
+        AND d.deleted_at IS NULL
+        AND f.deleted_at IS NULL
+        AND p.deleted_at IS NULL
+      `,
       [companyId]
     );
 
     res.json({
       totalProjects: Number(projectCount.rows[0].count),
-      totalDocuments: Number(documentCount.rows[0].count)
+      totalDocuments: Number(documentCount.rows[0].count),
     });
-
   } catch (error) {
     console.error("Customer Dashboard Error:", error);
     res.status(500).json({ message: "Server error" });

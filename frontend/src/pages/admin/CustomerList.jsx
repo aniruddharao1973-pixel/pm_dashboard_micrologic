@@ -1,14 +1,9 @@
 
-
-
-
-
 // src/pages/admin/CustomerList.jsx
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAdminApi } from "../../api/adminApi";
 import Swal from "sweetalert2";
-import AddCollaboratorModal from "../../components/modals/AddCollaboratorModal";
 
 export default function CustomerList() {
 const { getCustomers, deleteCompany } = useAdminApi();
@@ -17,8 +12,6 @@ const { getCustomers, deleteCompany } = useAdminApi();
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const [openAdd, setOpenAdd] = useState(false);
-  const [selectedCompany, setSelectedCompany] = useState(null);
 
   const loadCustomers = async () => {
     try {
@@ -203,13 +196,6 @@ const { getCustomers, deleteCompany } = useAdminApi();
                         <span className="truncate">{company.users[0]?.email}</span>
                       </div>
 
-                      {/* Collaborators */}
-                      {company.users.slice(1).map((u) => (
-                        <div key={u.id} className="flex items-center gap-1.5 text-sm text-gray-600">
-                          <span className="flex-shrink-0">📧</span>
-                          <span className="truncate">{u.email}</span>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 </div>
@@ -265,24 +251,7 @@ const { getCustomers, deleteCompany } = useAdminApi();
                     Edit
                   </button>
 
-                  {/* Add Collaborator */}
-                  <button
-                    onClick={() => {
-                      setSelectedCompany(company);
-                      setOpenAdd(true);
-                    }}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg
-                               bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800
-                               text-white text-sm font-medium shadow-sm hover:shadow-md
-                               transform hover:scale-105 transition-all duration-200 ease-in-out
-                               border border-emerald-700"
-                    title="Add collaborator"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                    </svg>
-                    Add
-                  </button>
+                  
 
                   {/* Delete */}
                   <button
@@ -347,13 +316,6 @@ const { getCustomers, deleteCompany } = useAdminApi();
               <span className="truncate">{company.users[0]?.email}</span>
             </div>
             
-            {/* Collaborators */}
-            {company.users.slice(1).map((u) => (
-              <div key={u.id} className="flex items-center gap-1.5 text-xs sm:text-sm text-gray-600">
-                <span>📧</span>
-                <span className="truncate">{u.email}</span>
-              </div>
-            ))}
           </div>
         </div>
         
@@ -395,21 +357,7 @@ const { getCustomers, deleteCompany } = useAdminApi();
             Edit
           </button>
           
-          <button
-            onClick={() => {
-              setSelectedCompany(company);
-              setOpenAdd(true);
-            }}
-            className="flex items-center justify-center gap-1.5 px-1.5 py-2 rounded-lg
-                       bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800
-                       text-white text-xs sm:text-sm font-medium shadow-sm hover:shadow-md
-                       transform hover:scale-105 transition-all duration-200"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-            </svg>
-            Add
-          </button>
+
           
           <button
             onClick={() => handleDelete(company.company_id, company.company_name)}
@@ -439,15 +387,6 @@ const { getCustomers, deleteCompany } = useAdminApi();
   </div>
 </>
         )}
-
-        {/* Add Collaborator Modal */}
-        <AddCollaboratorModal
-          open={openAdd}
-          onClose={() => setOpenAdd(false)}
-          companyName={selectedCompany?.company_name}
-          companyId={selectedCompany?.company_id}
-          onAdded={loadCustomers}
-        />
 
       </div>
     </div>

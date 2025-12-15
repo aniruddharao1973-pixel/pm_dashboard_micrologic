@@ -33,7 +33,6 @@ socket.on("disconnect", () => {
 
 // 🔥 All backend events that should refresh UI
 socket.on("document-updated", triggerRefresh);
-socket.on("approval-updated", triggerRefresh);
 socket.on("download-permission-updated", triggerRefresh);
 socket.on("version-created", triggerRefresh);
 socket.on("document-deleted", triggerRefresh);

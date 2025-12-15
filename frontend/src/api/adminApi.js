@@ -20,28 +20,16 @@ export const useAdminApi = () => {
   const getCustomer = (companyId) =>
     api.get(`/admin/company/${companyId}`);
 
-  // Update COMPANY profile (sync collaborator also)
+  // Update COMPANY profile
   const updateCustomer = (companyId, payload) =>
     api.put(`/admin/company/${companyId}`, payload);
 
   /* ---------------------------------------------
       DELETE ENTIRE COMPANY 
-      (Deletes: company + admin + collaborator + projects + folders + docs)
+    (Deletes: company + users + projects + folders + docs)
   --------------------------------------------- */
   const deleteCompany = (companyId) =>
     api.delete(`/admin/company/${companyId}`);
-
-  /* ---------------------------------------------
-      DELETE ONLY COLLABORATOR
-  --------------------------------------------- */
-  const deleteCollaborator = (userId) =>
-    api.delete(`/admin/collaborator/${userId}`);
-
-  /* ---------------------------------------------
-      ADD COLLABORATOR TO COMPANY
-  --------------------------------------------- */
-  const addCollaborator = (payload) =>
-    api.post("/admin/add-collaborator", payload);
 
   /* ---------------------------------------------
       PROJECTS
@@ -78,19 +66,17 @@ export const useAdminApi = () => {
   /* ---------------------------------------------
       EXPORT FUNCTIONS
   --------------------------------------------- */
-  return {
-    createCustomer,
-    getCustomers,
-    getCustomer,
-    updateCustomer,
-    deleteCompany,
-    deleteCollaborator,
-    addCollaborator,
-    createProject,
-    createFolder,
-    getProjects,
-    deleteProject,
-    getEmailLogs,
-    resendCredentials,
-  };
+return {
+  createCustomer,
+  getCustomers,
+  getCustomer,
+  updateCustomer,
+  deleteCompany,
+  createProject,
+  createFolder,
+  getProjects,
+  deleteProject,
+  getEmailLogs,
+  resendCredentials,
+};
 };
