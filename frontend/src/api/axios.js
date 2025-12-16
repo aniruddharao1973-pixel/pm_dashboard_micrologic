@@ -1,5 +1,3 @@
-
-
 // src/api/axios.js
 import axios from "axios";
 import { useContext } from "react";
@@ -31,13 +29,25 @@ export const useAxios = () => {
   /* ---------------------------------------------------------
      ATTACH TOKEN FOR EVERY REQUEST
   --------------------------------------------------------- */
+  /* ---------------------------------------------------------
+   ATTACH TOKEN FOR EVERY REQUEST
+   ❗ EXCEPT PASSWORD RESET ROUTES
+--------------------------------------------------------- */
   instance.interceptors.request.use(
     (config) => {
-      if (token) {
-        // ensure headers object exists
+      // Normalize URL (absolute vs relative safety)
+      const url = config.url || "";
+
+      const isAuthResetRoute =
+        url.includes("/auth/request-reset") ||
+        url.includes("/auth/confirm-reset") ||
+        url.includes("/auth/validate-reset");
+
+      if (token && !isAuthResetRoute) {
         config.headers = config.headers || {};
         config.headers.Authorization = `Bearer ${token}`;
       }
+
       return config;
     },
     (error) => Promise.reject(error)
@@ -74,7 +84,8 @@ export const useAxios = () => {
         try {
           // call backend refresh endpoint with current token (server implementation from your backend)
           const refreshRes = await axios.post(
-            (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000") + "/api/auth/refresh",
+            (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000") +
+              "/api/auth/refresh",
             { token },
             { withCredentials: true }
           );

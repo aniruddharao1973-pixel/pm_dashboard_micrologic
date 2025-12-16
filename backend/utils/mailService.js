@@ -1,17 +1,19 @@
-
 // backend/utils/mailService.js
-import 'dotenv/config';
-import axios from 'axios';
-import qs from 'qs';
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import "dotenv/config";
+import axios from "axios";
+import qs from "qs";
+import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Path to logo in your repo (same as before)
-const logoPath = path.resolve(__dirname, '../../frontend/public/Micrologic_new_logo.png');
+const logoPath = path.resolve(
+  __dirname,
+  "../../frontend/public/Micrologic_new_logo.png"
+);
 
 // Token endpoint
 const tokenEndpoint = `https://login.microsoftonline.com/${process.env.TENANT_ID}/oauth2/v2.0/token`;
@@ -21,85 +23,111 @@ async function getAccessToken() {
   const data = {
     client_id: process.env.CLIENT_ID,
     client_secret: process.env.CLIENT_SECRET,
-    grant_type: 'refresh_token',
+    grant_type: "refresh_token",
     refresh_token: process.env.REFRESH_TOKEN,
-    scope: 'offline_access Mail.Send openid profile'
+    scope: "offline_access Mail.Send openid profile",
   };
 
   try {
-        const resp = await axios.post(tokenEndpoint, qs.stringify(data), {
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-        });
+    const resp = await axios.post(tokenEndpoint, qs.stringify(data), {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
 
-        // Persist rotated refresh token only in development (never in production)
-        if (
-          resp.data.refresh_token &&
-          resp.data.refresh_token !== process.env.REFRESH_TOKEN
-        ) {
+    // Persist rotated refresh token only in development (never in production)
+    if (
+      resp.data.refresh_token &&
+      resp.data.refresh_token !== process.env.REFRESH_TOKEN
+    ) {
+      if (process.env.NODE_ENV !== "production") {
+        await persistRefreshToken(resp.data.refresh_token);
+        console.log("New refresh_token persisted to .env");
+      }
 
-          if (process.env.NODE_ENV !== 'production') {
-            await persistRefreshToken(resp.data.refresh_token);
-            console.log('New refresh_token persisted to .env');
-          }
+      process.env.REFRESH_TOKEN = resp.data.refresh_token;
+    }
 
-          process.env.REFRESH_TOKEN = resp.data.refresh_token;
-        }
-
-        return resp.data.access_token;
-
+    return resp.data.access_token;
   } catch (err) {
-    console.error('Failed to get access token:', err.response ? err.response.data : err.message);
+    console.error(
+      "Failed to get access token:",
+      err.response ? err.response.data : err.message
+    );
     throw err;
   }
 }
 
 // Persist refresh token to .env (simple implementation for development)
 async function persistRefreshToken(newToken) {
-  const envPath = path.resolve(process.cwd(), '.env');
+  const envPath = path.resolve(process.cwd(), ".env");
   try {
-    let text = '';
-    try { text = await fs.readFile(envPath, 'utf8'); } catch {}
+    let text = "";
+    try {
+      text = await fs.readFile(envPath, "utf8");
+    } catch {}
     const regex = /^REFRESH_TOKEN=.*$/m;
     if (regex.test(text)) {
       text = text.replace(regex, `REFRESH_TOKEN=${newToken}`);
     } else {
-      if (text.length && !text.endsWith('\n')) text += '\n';
+      if (text.length && !text.endsWith("\n")) text += "\n";
       text += `REFRESH_TOKEN=${newToken}\n`;
     }
-    await fs.writeFile(envPath, text, 'utf8');
+    await fs.writeFile(envPath, text, "utf8");
   } catch (e) {
-    console.warn('Unable to persist refresh token to .env:', e.message || e);
+    console.warn("Unable to persist refresh token to .env:", e.message || e);
   }
 }
 
 // Helper: read file and return base64 string
 async function fileToBase64(filePath) {
   const buffer = await fs.readFile(filePath);
-  return buffer.toString('base64');
+  return buffer.toString("base64");
 }
 
-// Helper: send message payload to Graph
-async function graphSendMail({ subject, htmlBody, toRecipients = [], attachments = [] }) {
+// Helper: send message payload to Graph (HTML + optional text fallback)
+async function graphSendMail({
+  subject,
+  htmlBody,
+  textBody,
+  toRecipients = [],
+  attachments = [],
+}) {
   const token = await getAccessToken();
+
   const payload = {
     message: {
       subject,
-      body: { contentType: 'HTML', content: htmlBody },
-      toRecipients: toRecipients.map(addr => ({ emailAddress: { address: addr } })),
-      attachments: attachments // attachments expected in Graph format
+      body: {
+        contentType: "HTML",
+        content: htmlBody,
+      },
+      toRecipients: toRecipients.map((addr) => ({
+        emailAddress: { address: addr },
+      })),
+      attachments,
     },
-    saveToSentItems: true
+    saveToSentItems: true,
   };
 
+  // ✅ Plain-text fallback (enterprise / accessibility / spam-safe)
+  if (textBody) {
+    payload.message.uniqueBody = {
+      contentType: "Text",
+      content: textBody,
+    };
+  }
+
   try {
-    await axios.post('https://graph.microsoft.com/v1.0/me/sendMail', payload, {
+    await axios.post("https://graph.microsoft.com/v1.0/me/sendMail", payload, {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     });
   } catch (err) {
-    console.error('graphSendMail failed:', err.response ? err.response.data : err.message);
+    console.error(
+      "graphSendMail failed:",
+      err.response ? err.response.data : err.message
+    );
     throw err;
   }
 }
@@ -120,15 +148,15 @@ async function buildInlineLogoAttachment() {
   try {
     const b64 = await fileToBase64(logoPath);
     return {
-      '@odata.type': '#microsoft.graph.fileAttachment',
-      name: 'logo.png',
-      contentType: 'image/png',
+      "@odata.type": "#microsoft.graph.fileAttachment",
+      name: "logo.png",
+      contentType: "image/png",
       contentBytes: b64,
-      contentId: 'app_logo',
-      isInline: true
+      contentId: "app_logo",
+      isInline: true,
     };
   } catch (err) {
-    console.warn('Logo not included (file missing):', logoPath);
+    console.warn("Logo not included (file missing):", logoPath);
     return null;
   }
 }
@@ -141,11 +169,15 @@ async function buildInlineLogoAttachment() {
 
 // small helper to get greeting
 function getGreeting() {
-  const indiaTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata', hour: 'numeric', hour12: false });
-  const hour = parseInt(indiaTime.split(':')[0], 10);
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
+  const indiaTime = new Date().toLocaleString("en-US", {
+    timeZone: "Asia/Kolkata",
+    hour: "numeric",
+    hour12: false,
+  });
+  const hour = parseInt(indiaTime.split(":")[0], 10);
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
 }
 
 /* ============================================================
@@ -514,7 +546,7 @@ export async function sendCustomerCredentials({ toEmail, name, tempPassword }) {
 </body>
 </html>
 `;
- // paste your full large HTML template here exactly as before
+  // paste your full large HTML template here exactly as before
   /* NOTE: keep the <img src="cid:app_logo" .../> in the HTML exactly as you had.
      Graph inline attachment uses contentId 'app_logo' which matches cid:app_logo. */
 
@@ -523,21 +555,27 @@ export async function sendCustomerCredentials({ toEmail, name, tempPassword }) {
   if (logoAttachment) attachments.push(logoAttachment);
 
   await graphSendMail({
-    subject: 'Your PM Dashboard Login Credentials 🔑',
+    subject: "Your PM Dashboard Login Credentials 🔑",
     htmlBody: html,
     toRecipients: [toEmail],
-    attachments
+    attachments,
   });
 
-  console.log('Sent credentials email to', toEmail);
+  console.log("Sent credentials email to", toEmail);
 }
 
 /* ============================================================
    sendFileUploadedEmail
    - toEmail, fileName, folderName, projectName, companyName
 ============================================================ */
-export async function sendFileUploadedEmail({ toEmail, fileName, folderName, projectName, companyName }) {
-    const logoAttachment = await buildInlineLogoAttachment();
+export async function sendFileUploadedEmail({
+  toEmail,
+  fileName,
+  folderName,
+  projectName,
+  companyName,
+}) {
+  const logoAttachment = await buildInlineLogoAttachment();
   const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -673,26 +711,31 @@ export async function sendFileUploadedEmail({ toEmail, fileName, folderName, pro
 </html>
 `;
 
-const attachments = [];
-if (logoAttachment) attachments.push(logoAttachment);
+  const attachments = [];
+  if (logoAttachment) attachments.push(logoAttachment);
 
-await graphSendMail({
-  subject: `📤 File Uploaded: ${fileName}`,
-  htmlBody: html,
-  toRecipients: [toEmail],
-  attachments
-});
+  await graphSendMail({
+    subject: `📤 File Uploaded: ${fileName}`,
+    htmlBody: html,
+    toRecipients: [toEmail],
+    attachments,
+  });
 
-
-  console.log('Sent file uploaded email to', toEmail);
+  console.log("Sent file uploaded email to", toEmail);
 }
 
 /* ============================================================
    sendFileDeletedEmail
    - toEmail, fileName, folderName, projectName, companyName
 ============================================================ */
-export async function sendFileDeletedEmail({ toEmail, fileName, folderName, projectName, companyName }) {
-    const logoAttachment = await buildInlineLogoAttachment();
+export async function sendFileDeletedEmail({
+  toEmail,
+  fileName,
+  folderName,
+  projectName,
+  companyName,
+}) {
+  const logoAttachment = await buildInlineLogoAttachment();
   const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -829,19 +872,19 @@ export async function sendFileDeletedEmail({ toEmail, fileName, folderName, proj
 </html>
 `;
 
-const attachments = [];
-if (logoAttachment) {
-  attachments.push(logoAttachment);
-}
+  const attachments = [];
+  if (logoAttachment) {
+    attachments.push(logoAttachment);
+  }
 
-await graphSendMail({
-  subject: `❌ File Deleted: ${fileName}`,
-  htmlBody: html,
-  toRecipients: [toEmail],
-  attachments
-});
+  await graphSendMail({
+    subject: `❌ File Deleted: ${fileName}`,
+    htmlBody: html,
+    toRecipients: [toEmail],
+    attachments,
+  });
 
-console.log('Sent file deleted email to', toEmail);
+  console.log("Sent file deleted email to", toEmail);
 }
 
 /* ============================================================
@@ -854,7 +897,7 @@ export async function sendRestoreRequestEmail({
   projectName,
   folderName,
   companyName,
-  requestedBy
+  requestedBy,
 }) {
   const logoAttachment = await buildInlineLogoAttachment();
 
@@ -953,7 +996,7 @@ export async function sendRestoreRequestEmail({
     subject: `♻️ Restore Request: ${documentName}`,
     htmlBody: html,
     toRecipients: [toEmail],
-    attachments
+    attachments,
   });
 
   console.log("Sent restore request email to admin:", toEmail);
@@ -967,7 +1010,7 @@ export async function sendRestoreApprovedEmail({
   toEmail,
   documentName,
   projectName,
-  companyName
+  companyName,
 }) {
   const logoAttachment = await buildInlineLogoAttachment();
 
@@ -1060,8 +1103,109 @@ export async function sendRestoreApprovedEmail({
     subject: `✅ Document Restored: ${documentName}`,
     htmlBody: html,
     toRecipients: [toEmail],
-    attachments
+    attachments,
   });
 
   console.log("Sent restore approved email to customer:", toEmail);
+}
+
+// send password email
+
+export async function sendPasswordResetEmail({ toEmail, name, resetLink }) {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f7fa; line-height: 1.6;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f7fa; padding: 40px 20px;">
+        <tr>
+          <td align="center">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);">
+              
+              <!-- Header with gradient -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 40px 35px; text-align: center;">
+                <div style="background-color: rgba(255,255,255,0.15); width:80px; height:80px; margin:0 auto 20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:36px; color:#ffffff;">
+                  🔒
+                </div>
+
+                  <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Password Reset</h1>
+                </td>
+              </tr>
+              
+              <!-- Content -->
+              <tr>
+                <td style="padding: 40px 40px 35px;">
+                  <p style="margin: 0 0 16px; color: #1a202c; font-size: 18px; font-weight: 600;">Hello ${name},</p>
+                  <p style="margin: 0 0 20px; color: #4a5568; font-size: 15px; line-height: 1.7;">We received a request to reset your password for your PM Dashboard account. Click the button below to create a new password:</p>
+                  
+                  <!-- Button -->
+                  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 30px 0;">
+                    <tr>
+                      <td align="center">
+                        <a href="${resetLink}" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); transition: all 0.3s ease;">
+                          Reset Your Password
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                  
+                  <!-- Info box -->
+                  <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px 20px; border-radius: 8px; margin: 25px 0;">
+                    <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
+                      <strong style="display: block; margin-bottom: 4px;">⏱️ Time Sensitive</strong>
+                      This link is valid for 15 minutes only.
+                    </p>
+                  </div>
+                  
+                  <p style="margin: 20px 0 0; color: #718096; font-size: 14px; line-height: 1.7;">
+                    If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
+                  </p>
+                </td>
+              </tr>
+              
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #f7fafc; padding: 30px 40px; border-top: 1px solid #e2e8f0;">
+                  <p style="margin: 0 0 8px; color: #718096; font-size: 13px; text-align: center;">
+                    This is an automated message from PM Dashboard
+                  </p>
+                  <p style="margin: 0; color: #a0aec0; font-size: 12px; text-align: center;">
+                    © ${new Date().getFullYear()} PM Dashboard. All rights reserved.
+                  </p>
+                </td>
+              </tr>
+              
+            </table>
+            
+            <!-- Support text below card -->
+            <p style="margin: 20px 0 0; color: #a0aec0; font-size: 13px; text-align: center; line-height: 1.6;">
+              Having trouble with the button? Copy and paste this link into your browser:<br>
+              <a href="${resetLink}" target="_blank" style="color: #667eea; text-decoration: none; word-break: break-all;">${resetLink}</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  await graphSendMail({
+    subject: "Reset your PM Dashboard password",
+    htmlBody: html,
+    textBody: `Hello ${name},
+
+We received a request to reset your PM Dashboard password.
+
+Reset your password using the link below (valid for 15 minutes):
+${resetLink}
+
+If you did not request this, please ignore this email.
+
+PM Dashboard`,
+    toRecipients: [toEmail],
+  });
 }

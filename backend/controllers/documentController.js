@@ -574,66 +574,119 @@ export const restoreDocument = async (req, res) => {
     return res.status(403).json({ message: "Access denied" });
   }
 
+  const client = await pool.connect();
+
   try {
-    // 1️⃣ Restore document
-    const restored = await pool.query(
-      `
-      UPDATE documents
-      SET deleted_at = NULL,
-          deleted_by = NULL
-      WHERE id = $1
-      RETURNING id, title
-      `,
-      [documentId]
-    );
+    await client.query("BEGIN");
 
-    if (restored.rowCount === 0) {
-      return res.status(404).json({ message: "Document not found" });
-    }
-
-    const documentTitle = restored.rows[0].title;
-
-    // 2️⃣ Fetch email metadata
-    const meta = await pool.query(
+    // 1️⃣ Load document + folder state
+    const docRes = await client.query(
       `
       SELECT
-        p.name AS project_name,
-        c.name AS company_name,
-        u.email
+        d.id,
+        d.title,
+        d.folder_id,
+        f.project_id,
+        f.deleted_at AS folder_deleted
       FROM documents d
       JOIN folders f ON f.id = d.folder_id
-      JOIN projects p ON p.id = f.project_id
-      JOIN companies c ON c.id = p.company_id
-      JOIN user_companies uc ON uc.company_id = c.id
-      JOIN users u ON u.id = uc.user_id
       WHERE d.id = $1
       `,
       [documentId]
     );
 
-    console.log("📧 Restore approved email recipients:", meta.rows);
+    if (docRes.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ message: "Document not found" });
+    }
 
-    // 3️⃣ Respond immediately (UI stays fast)
-    res.json({ message: "Document restored successfully" });
+    const { title, folder_id, project_id, folder_deleted } = docRes.rows[0];
+    let targetFolderId = folder_id;
+    let usedFallback = false;
 
-    // 4️⃣ Send restore-approved emails (non-blocking)
+    // 2️⃣ If original folder is deleted → fallback to Customer Documents
+    if (folder_deleted) {
+      const fallback = await client.query(
+        `
+        SELECT id
+        FROM folders
+        WHERE name = 'Customer Documents'
+          AND project_id = $1
+          AND deleted_at IS NULL
+        `,
+        [project_id]
+      );
+
+      if (fallback.rowCount === 0) {
+        await client.query("ROLLBACK");
+        return res.status(500).json({
+          message: "Customer Documents folder not found",
+        });
+      }
+
+      targetFolderId = fallback.rows[0].id;
+      usedFallback = true;
+    }
+
+    // 3️⃣ Restore document safely
+    await client.query(
+      `
+      UPDATE documents
+      SET deleted_at = NULL,
+          deleted_by = NULL,
+          folder_id = $2
+      WHERE id = $1
+      `,
+      [documentId, targetFolderId]
+    );
+
+    await client.query("COMMIT");
+
+    // 4️⃣ Respond immediately
+    res.json({
+      message: usedFallback
+        ? "Original folder no longer exists. Document restored to Customer Documents."
+        : "Document restored successfully",
+    });
+
+    // 5️⃣ Send restore-approved emails (non-blocking)
     setTimeout(async () => {
-      for (const row of meta.rows) {
-        try {
+      try {
+        const meta = await pool.query(
+          `
+          SELECT
+            p.name AS project_name,
+            c.name AS company_name,
+            u.email
+          FROM documents d
+          JOIN folders f ON f.id = d.folder_id
+          JOIN projects p ON p.id = f.project_id
+          JOIN companies c ON c.id = p.company_id
+          JOIN user_companies uc ON uc.company_id = c.id
+          JOIN users u ON u.id = uc.user_id
+          WHERE d.id = $1
+          `,
+          [documentId]
+        );
+
+        for (const row of meta.rows) {
           await sendRestoreApprovedEmail({
             toEmail: row.email,
-            documentName: documentTitle,
+            documentName: title,
             projectName: row.project_name,
             companyName: row.company_name,
           });
-        } catch (e) {
-          console.error("Restore approved email failed:", e.message);
         }
+      } catch (e) {
+        console.error("Restore email error:", e.message);
       }
     }, 0);
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("Restore error:", err);
     res.status(500).json({ message: "Server error" });
+  } finally {
+    client.release();
   }
 };
 

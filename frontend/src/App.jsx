@@ -28,6 +28,8 @@ import { connectSocket } from "./socket";
 import AdminRecycleBin from "./pages/admin/RecycleBin";
 import CustomerRecycleBin from "./pages/customer/RecycleBin";
 
+import ResetPassword from "./pages/ResetPassword";
+
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
@@ -98,6 +100,9 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
+
+        {/* ✅ PASSWORD RESET — PUBLIC ROUTE */}
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         <Route path="/forbidden" element={<ForbiddenPage />} />
 

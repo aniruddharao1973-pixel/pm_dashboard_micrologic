@@ -207,8 +207,8 @@ export default function RecycleBin() {
         {documents.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[50vh]">
             <div className="relative mb-6">
-              <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full blur-2xl opacity-30"></div>
-              <div className="relative bg-white rounded-3xl p-8 shadow-xl">
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-400 to-gray-300 rounded-full blur-2xl opacity-30"></div>
+              <div className="relative bg-blue-400 rounded-3xl p-8 shadow-xl">
                 <FileX className="w-20 h-20 text-gray-300" />
               </div>
             </div>

@@ -1,50 +1,49 @@
-// import express from "express";
-// import { 
-//   login, 
-//   changePassword, 
-//   setNewPassword 
-// } from "../controllers/authController.js";
-// import { authMiddleware } from "../middleware/authMiddleware.js";
-
-// const router = express.Router();
-
-// // Login (admin + customer)
-// router.post("/login", login);
-
-// // First-time password setup (NO TOKEN REQUIRED)
-// router.post("/set-new-password", setNewPassword);
-
-// // Regular password change (requires login + token)
-// router.post("/change-password", authMiddleware, changePassword);
-
-// export default router;
-
-
-
 // backend/routes/auth.js
 
 import express from "express";
-import { 
-  login, 
-  changePassword, 
+
+import {
+  login,
+  changePassword,
   setNewPassword,
-  refreshToken
+  refreshToken,
+  requestPasswordReset,
+  confirmPasswordReset,
+  validateResetToken, // ✅ MISSING IMPORT — NOW ADDED
 } from "../controllers/authController.js";
+
 import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Login (admin + customer)
+/* -----------------------------------------------------
+   AUTHENTICATION
+----------------------------------------------------- */
+
+// Login (Admin / TechSales / Customer)
 router.post("/login", login);
 
-// First-time password setup (NO TOKEN REQUIRED)
+// First-time password setup (temporary password → new password)
+// ❗ No authMiddleware by design
 router.post("/set-new-password", setNewPassword);
 
-// Regular password change (requires login + token)
+// Normal password change (logged-in users)
 router.post("/change-password", authMiddleware, changePassword);
 
-// ⭐ NEW — Auto Refresh Token
+// Refresh JWT token (protected)
 router.post("/refresh", authMiddleware, refreshToken);
 
+/* -----------------------------------------------------
+   PASSWORD RESET (FORGOT PASSWORD)
+----------------------------------------------------- */
+
+// Step 1: Request reset (after failed attempts or manual click)
+router.post("/request-reset", requestPasswordReset);
+
+// Step 2: Validate reset token (used by frontend reset page)
+router.get("/validate-reset/:token", validateResetToken);
+
+// Step 3: Confirm reset (set new password)
+router.post("/confirm-reset", confirmPasswordReset);
 
 export default router;

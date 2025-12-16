@@ -176,6 +176,13 @@ const DashboardLayout = ({ children }) => {
     };
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   if (loading) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-gray-50">
@@ -243,7 +250,7 @@ const DashboardLayout = ({ children }) => {
           )}
 
           {/* Page body */}
-          <main className="flex-1 p-0 sm:p-6 overflow-y-auto bg-gradient-to-b from-gray-50 to-white transition-all duration-300">
+          <main className="flex-1 p-0 sm:p-6 overflow-hidden bg-gradient-to-b from-gray-50 to-white transition-all duration-300">
             {children}
           </main>
         </div>

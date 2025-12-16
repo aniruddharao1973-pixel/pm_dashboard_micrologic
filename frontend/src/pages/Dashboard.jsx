@@ -1,6 +1,3 @@
-
-
-
 // src/pages/Dashboard.jsx
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
@@ -105,7 +102,7 @@ function Dashboard() {
               className="group cursor-pointer bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-sm hover:shadow-xl hover:-translate-y-0 sm:hover:-translate-y-1 transition-all duration-300 overflow-hidden relative"
             >
               <div className="absolute top-0 right-0 w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-gradient-to-br from-pink-500/10 to-transparent rounded-full -mr-12 -mt-12 sm:-mr-14 sm:-mt-14 md:-mr-16 md:-mt-16" />
-              
+
               <div className="relative">
                 {/* Card Header */}
                 <div className="flex items-center justify-between mb-4 sm:mb-5 md:mb-6">
@@ -141,7 +138,7 @@ function Dashboard() {
             className="group cursor-pointer bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 shadow-sm hover:shadow-xl hover:-translate-y-0 sm:hover:-translate-y-1 transition-all duration-300 overflow-hidden relative"
           >
             <div className="absolute top-0 right-0 w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-gradient-to-br from-blue-500/10 to-transparent rounded-full -mr-12 -mt-12 sm:-mr-14 sm:-mt-14 md:-mr-16 md:-mt-16" />
-            
+
             <div className="relative">
               {/* Card Header */}
               <div className="flex items-center justify-between mb-4 sm:mb-5 md:mb-6">
@@ -150,8 +147,8 @@ function Dashboard() {
                     <Folder className="text-blue-600 w-5 h-5 sm:w-5 sm:h-5 md:w-6 md:h-6" />
                   </div>
                   <h3 className="text-gray-700 text-sm sm:text-base font-semibold">
-                    {user.role === "admin" || user.role === "techsales" 
-                      ? "Total Projects" 
+                    {user.role === "admin" || user.role === "techsales"
+                      ? "Total Projects"
                       : "My Projects"}
                   </h3>
                 </div>

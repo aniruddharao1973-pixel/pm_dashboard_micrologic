@@ -1,6 +1,3 @@
-
-
-
 // src/components/Header.jsx
 import React from "react";
 import { useAuth } from "../hooks/useAuth";
@@ -69,7 +66,6 @@ const Header = ({ setSidebarOpen }) => {
 
       {/* Main content wrapper with responsive padding */}
       <div className="relative z-10 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10 py-2.5 sm:py-3 md:py-4 flex items-center justify-between gap-2 sm:gap-3 md:gap-4">
-        
         {/* LEFT: Hamburger + Logo + Title */}
         <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1">
           {/* Hamburger menu - visible on mobile and tablet, hidden on desktop (xl) */}
@@ -142,7 +138,6 @@ const Header = ({ setSidebarOpen }) => {
                   ? "Customer"
                   : "Guest"}
               </span>
-
             </div>
           </div>
 
@@ -165,8 +160,18 @@ const Header = ({ setSidebarOpen }) => {
             className="inline-flex sm:hidden p-1.5 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 shadow-sm active:scale-95 transition-all"
             aria-label="Logout"
           >
-            <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            <svg
+              className="w-4 h-4 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
             </svg>
           </button>
         </div>

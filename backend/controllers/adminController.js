@@ -1,4 +1,3 @@
-
 // backend/controllers/adminController.js
 
 import bcrypt from "bcrypt";
@@ -7,19 +6,18 @@ import { pool } from "../db.js";
 import { sendCustomerCredentials } from "../utils/mailService.js";
 import { insertEmailLog, getEmailLogs } from "../models/emailLogModel.js";
 
-
 /* ---------------------------------------------------
    1️⃣ Create Customer (Admin Only) — CLEANED AUTO-CREATION)
 --------------------------------------------------- */
 export const createCustomer = async (req, res) => {
   const {
     name,
-    email,                 // customer admin email
+    email, // customer admin email
     externalId,
     location,
     contactPerson,
     contactPhone,
-    registerDate
+    registerDate,
   } = req.body;
 
   console.log("\n=== Create Customer Called ===");
@@ -30,7 +28,7 @@ export const createCustomer = async (req, res) => {
     location,
     contactPerson,
     contactPhone,
-    registerDate
+    registerDate,
   });
 
   try {
@@ -65,22 +63,21 @@ export const createCustomer = async (req, res) => {
     } else {
       console.log("Creating NEW company:", name);
 
-    const newComp = await pool.query(
-      `INSERT INTO companies
+      const newComp = await pool.query(
+        `INSERT INTO companies
         (name, external_id, location, contact_person, contact_phone, register_date, created_by)
       VALUES ($1,$2,$3,$4,$5,$6,$7)
       RETURNING id`,
-      [
-        name,
-        externalId || null,
-        location || null,
-        contactPerson || null,
-        contactPhone || null,
-        registerDate || null,
-        req.user.id
-      ]
-    );
-
+        [
+          name,
+          externalId || null,
+          location || null,
+          contactPerson || null,
+          contactPhone || null,
+          registerDate || null,
+          req.user.id,
+        ]
+      );
 
       companyId = newComp.rows[0].id;
       console.log("New company created:", companyId);
@@ -143,17 +140,13 @@ export const createCustomer = async (req, res) => {
       companyId,
       adminUser: customerAdmin,
       adminTempPassword,
-      emailSent: true
+      emailSent: true,
     });
-
   } catch (err) {
     console.error("CreateCustomer ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
-
-
-
 
 /* ---------------------------------------------------
    1.5️⃣ Resend Credentials
@@ -184,42 +177,41 @@ export const resendCredentials = async (req, res) => {
       [hashed, customerId]
     );
 
-/* ---------------------------------------------------
+    /* ---------------------------------------------------
    SEND RESEND EMAIL (NON-BLOCKING)
 --------------------------------------------------- */
-Promise.resolve().then(async () => {
-  try {
-    console.log("📧 Sending resend credentials email in background...");
-    const emailResp = await sendCustomerCredentials({
-      toEmail: customer.email,
-      name: customer.name,
-      tempPassword,
-    });
+    Promise.resolve().then(async () => {
+      try {
+        console.log("📧 Sending resend credentials email in background...");
+        const emailResp = await sendCustomerCredentials({
+          toEmail: customer.email,
+          name: customer.name,
+          tempPassword,
+        });
 
-    await insertEmailLog({
-      customer_id: customer.id,
-      email: customer.email,
-      temporary_password: tempPassword,
-      subject: "Your PM Dashboard Login Credentials (Resent)",
-      body: JSON.stringify(emailResp),
-      status: "sent",
-      error: null,
-    });
-  } catch (emailErr) {
-    console.error("❌ Background resend email failed:", emailErr);
+        await insertEmailLog({
+          customer_id: customer.id,
+          email: customer.email,
+          temporary_password: tempPassword,
+          subject: "Your PM Dashboard Login Credentials (Resent)",
+          body: JSON.stringify(emailResp),
+          status: "sent",
+          error: null,
+        });
+      } catch (emailErr) {
+        console.error("❌ Background resend email failed:", emailErr);
 
-    await insertEmailLog({
-      customer_id: customer.id,
-      email: customer.email,
-      temporary_password: tempPassword,
-      subject: "Your PM Dashboard Login Credentials (Resent)",
-      body: null,
-      status: "error",
-      error: emailErr.message || JSON.stringify(emailErr),
+        await insertEmailLog({
+          customer_id: customer.id,
+          email: customer.email,
+          temporary_password: tempPassword,
+          subject: "Your PM Dashboard Login Credentials (Resent)",
+          body: null,
+          status: "error",
+          error: emailErr.message || JSON.stringify(emailErr),
+        });
+      }
     });
-  }
-});
-
 
     res.json({
       message: "Credentials resent successfully",
@@ -227,7 +219,6 @@ Promise.resolve().then(async () => {
       temporaryPassword: tempPassword,
       emailSent: true,
     });
-
   } catch (err) {
     console.error("ResendCredentials Error:", err);
     res.status(500).json({ message: "Server error" });
@@ -247,15 +238,16 @@ export const fetchEmailLogs = async (req, res) => {
   }
 };
 
-
 /* ---------------------------------------------------
    2️⃣ Create Project (Admin Only) — FIXED FOR COMPANIES
 --------------------------------------------------- */
 export const createProject = async (req, res) => {
-  const { name, customerId } = req.body;   // customerId is actually companyId
+  const { name, customerId } = req.body; // customerId is actually companyId
 
   if (!name || !customerId) {
-    return res.status(400).json({ message: "Project name and companyId required" });
+    return res
+      .status(400)
+      .json({ message: "Project name and companyId required" });
   }
 
   console.log("\n=== Create Project Called ===");
@@ -270,16 +262,15 @@ export const createProject = async (req, res) => {
     "DAP",
     "Order Acceptence",
     "IWO",
-    "Media Assets",     // ⭐ NEW
-    "INC"               // ⭐ NEW
+    "Media Assets", // ⭐ NEW
+    "INC", // ⭐ NEW
   ];
 
   try {
     // 1️⃣ Validate company
-    const comp = await pool.query(
-      "SELECT id FROM companies WHERE id = $1",
-      [customerId]
-    );
+    const comp = await pool.query("SELECT id FROM companies WHERE id = $1", [
+      customerId,
+    ]);
 
     if (comp.rows.length === 0) {
       return res.status(404).json({ message: "Company not found" });
@@ -298,7 +289,7 @@ export const createProject = async (req, res) => {
 
     // 3️⃣ Insert default folders
     const insertedFolders = await Promise.all(
-      defaultFolders.map(folderName =>
+      defaultFolders.map((folderName) =>
         pool.query(
           `INSERT INTO folders (project_id, name, is_default)
            VALUES ($1, $2, true)
@@ -311,15 +302,13 @@ export const createProject = async (req, res) => {
     res.json({
       message: "Project created successfully",
       project,
-      folders: insertedFolders.map(f => f.rows[0]),
+      folders: insertedFolders.map((f) => f.rows[0]),
     });
-
   } catch (err) {
     console.error("CreateProject Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 /* ---------------------------------------------------
    3️⃣ Admin: Create Folder Inside Project
@@ -328,14 +317,15 @@ export const createFolder = async (req, res) => {
   const { projectId, folderName } = req.body;
 
   if (!folderName || !projectId) {
-    return res.status(400).json({ message: "Folder name & projectId required" });
+    return res
+      .status(400)
+      .json({ message: "Folder name & projectId required" });
   }
 
   try {
-    const exists = await pool.query(
-      "SELECT id FROM projects WHERE id = $1",
-      [projectId]
-    );
+    const exists = await pool.query("SELECT id FROM projects WHERE id = $1", [
+      projectId,
+    ]);
 
     if (exists.rows.length === 0) {
       return res.status(404).json({ message: "Project not found" });
@@ -352,7 +342,6 @@ export const createFolder = async (req, res) => {
       message: "Folder created successfully",
       folder: result.rows[0],
     });
-
   } catch (err) {
     console.error("CreateFolder Error:", err);
     res.status(500).json({ message: "Server error" });
@@ -374,13 +363,11 @@ export const getProjects = async (req, res) => {
     );
 
     res.json(out.rows);
-
   } catch (err) {
     console.error("GetProjects Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 /* ---------------------------------------------------
    5️⃣ Get All Customers (Grouped by Company)
@@ -415,7 +402,7 @@ export const getCustomers = async (req, res) => {
         grouped[row.company_id] = {
           company_id: row.company_id,
           company_name: row.company_name,
-          users: []
+          users: [],
         };
       }
 
@@ -423,7 +410,7 @@ export const getCustomers = async (req, res) => {
         id: row.user_id,
         name: row.user_name,
         email: row.user_email,
-        created_at: row.user_created_at
+        created_at: row.user_created_at,
       });
     }
 
@@ -432,13 +419,11 @@ export const getCustomers = async (req, res) => {
     console.log("Grouped Output:", finalOutput);
 
     res.json(finalOutput);
-
   } catch (err) {
     console.error("GetCustomers Grouped Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 /* ---------------------------------------------------
    6️⃣ Get Company Profile (Company + Users + Projects)
@@ -488,14 +473,11 @@ export const getCompanyProfile = async (req, res) => {
       users: usersRes.rows,
       projects: projectsRes.rows,
     });
-
   } catch (err) {
     console.error("GetCompanyProfile Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
-
-
 
 /* ---------------------------------------------------
    6️⃣ View Single Customer + Their Projects
@@ -532,7 +514,9 @@ export const getCustomerById = async (req, res) => {
     );
 
     if (compRes.rows.length === 0) {
-      return res.status(404).json({ message: "Company not found for this customer" });
+      return res
+        .status(404)
+        .json({ message: "Company not found for this customer" });
     }
 
     const companyId = compRes.rows[0].company_id;
@@ -551,7 +535,6 @@ export const getCustomerById = async (req, res) => {
       companyId,
       projects: projectsRes.rows,
     });
-
   } catch (err) {
     console.error("GetCustomerById Error:", err);
     res.status(500).json({ message: "Server error" });
@@ -581,7 +564,6 @@ export const getCustomerById = async (req, res) => {
 //     res.status(500).json({ message: "Server error" });
 //   }
 // };
-
 
 /* ---------------------------------------------------
    Delete Entire Company + All Users, Projects, Folders, Documents
@@ -624,16 +606,12 @@ export const deleteCompany = async (req, res) => {
       );
 
       console.log("🗑 Deleting folders...");
-      await pool.query(
-        `DELETE FROM folders WHERE project_id = ANY($1)`,
-        [projectIds]
-      );
+      await pool.query(`DELETE FROM folders WHERE project_id = ANY($1)`, [
+        projectIds,
+      ]);
 
       console.log("🗑 Deleting projects...");
-      await pool.query(
-        `DELETE FROM projects WHERE id = ANY($1)`,
-        [projectIds]
-      );
+      await pool.query(`DELETE FROM projects WHERE id = ANY($1)`, [projectIds]);
     }
 
     // 4️⃣ Delete ALL users (customer)
@@ -657,16 +635,14 @@ export const deleteCompany = async (req, res) => {
     console.log("✅ COMPANY DELETED SUCCESSFULLY");
 
     res.json({
-      message: "Company, all users, projects, folders, and documents deleted successfully",
+      message:
+        "Company, all users, projects, folders, and documents deleted successfully",
     });
-
   } catch (err) {
     console.error("❌ deleteCompany Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
-
-
 
 /* ---------------------------------------------------
    9️⃣ Update Company Profile (Admin Only)
@@ -681,7 +657,7 @@ export const updateCustomerProfile = async (req, res) => {
     contactPerson,
     contactEmail,
     contactPhone,
-    registerDate
+    registerDate,
   } = req.body;
 
   try {
@@ -718,23 +694,19 @@ export const updateCustomerProfile = async (req, res) => {
         contactEmail,
         contactPhone,
         registerDate,
-        companyId
+        companyId,
       ]
     );
 
-  
     res.json({
       message: "Company profile updated successfully",
-      company: updated.rows[0]
+      company: updated.rows[0],
     });
-
   } catch (err) {
     console.error("UpdateCompanyProfile ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
-
-
 
 /* ---------------------------------------------------
    Delete Single Project (Admin Only)
@@ -763,21 +735,14 @@ export const deleteProject = async (req, res) => {
     );
 
     // 3️⃣ Delete folders
-    await pool.query(
-      `DELETE FROM folders WHERE project_id = $1`,
-      [projectId]
-    );
+    await pool.query(`DELETE FROM folders WHERE project_id = $1`, [projectId]);
 
     // 4️⃣ Delete project
-    await pool.query(
-      `DELETE FROM projects WHERE id = $1`,
-      [projectId]
-    );
+    await pool.query(`DELETE FROM projects WHERE id = $1`, [projectId]);
 
     console.log("✅ Project deleted successfully");
 
     res.json({ message: "Project deleted successfully" });
-
   } catch (err) {
     console.error("❌ deleteProject Error", err);
     res.status(500).json({ message: "Server error" });

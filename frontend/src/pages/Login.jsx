@@ -1,19 +1,25 @@
-
-
-
 // src/pages/Login.jsx
 import React, { useState } from "react";
 import { useAuthApi } from "../api/authApi";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import ChangePasswordModal from "../components/modals/ChangePasswordModal";
-import { Eye, EyeOff, Mail, Lock, LogIn, Shield, Sparkles, ArrowRight } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  LogIn,
+  Shield,
+  Sparkles,
+  ArrowRight,
+} from "lucide-react";
 import Swal from "sweetalert2";
 
 const Login = () => {
   const navigate = useNavigate();
   const { login: saveLogin } = useAuth();
-  const { login: loginApi } = useAuthApi();
+  const { login: loginApi, requestPasswordReset } = useAuthApi();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -52,26 +58,79 @@ const Login = () => {
         showConfirmButton: false,
         background: "linear-gradient(135deg, #E0E7FF 0%, #F3E8FF 100%)",
         customClass: {
-          popup: 'rounded-2xl shadow-2xl border-2 border-indigo-200',
-          timerProgressBar: 'bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500'
-        }
+          popup: "rounded-2xl shadow-2xl border-2 border-indigo-200",
+          timerProgressBar:
+            "bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500",
+        },
       });
 
       // Admin + Tech Sales → admin dashboard
-      if (res.data.user.role === "admin" || res.data.user.role === "techsales") {
+      if (
+        res.data.user.role === "admin" ||
+        res.data.user.role === "techsales"
+      ) {
         navigate("/dashboard");
       } else {
         // Customer → customer dashboard
         navigate("/customer/dashboard");
       }
-
-
-
     } catch (err) {
+      const data = err?.response?.data;
+
+      // 🔐 RESET SUGGESTED FLOW
+      if (data?.resetSuggested) {
+        Swal.fire({
+          icon: "warning",
+          title: "Reset Password?",
+          html: `
+        <p class="text-slate-700 font-medium">
+          You’ve entered an incorrect password multiple times.
+        </p>
+        <p class="text-indigo-600 font-semibold mt-2">
+          Would you like to reset your password?
+        </p>
+      `,
+          showCancelButton: true,
+          confirmButtonText: "Send Reset Link",
+          cancelButtonText: "Cancel",
+          confirmButtonColor: "#6366f1",
+          cancelButtonColor: "#9ca3af",
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            try {
+              await requestPasswordReset(email);
+
+              Swal.fire({
+                icon: "success",
+                title: "Email Sent 📧",
+                html: `
+              <p class="text-slate-700 font-medium">
+                A password reset link has been sent to
+              </p>
+              <p class="text-indigo-600 font-semibold">${email}</p>
+            `,
+                confirmButtonColor: "#6366f1",
+              });
+            } catch {
+              Swal.fire({
+                icon: "error",
+                title: "Failed",
+                text: "Unable to send reset email. Please try again later.",
+              });
+            }
+          }
+        });
+
+        return;
+      }
+
+      // ❌ NORMAL LOGIN ERROR
       Swal.fire({
         icon: "error",
         title: "Login Failed",
-        html: `<p class="text-red-700 font-semibold">${err?.response?.data?.message || "Invalid email or password"}</p>`,
+        html: `<p class="text-red-700 font-semibold">${
+          data?.message || "Invalid email or password"
+        }</p>`,
         toast: true,
         position: "top-end",
         timer: 3000,
@@ -79,9 +138,9 @@ const Login = () => {
         showConfirmButton: false,
         background: "linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%)",
         customClass: {
-          popup: 'rounded-2xl shadow-2xl border-2 border-red-300',
-          timerProgressBar: 'bg-gradient-to-r from-red-500 to-rose-500'
-        }
+          popup: "rounded-2xl shadow-2xl border-2 border-red-300",
+          timerProgressBar: "bg-gradient-to-r from-red-500 to-rose-500",
+        },
       });
     } finally {
       setLoading(false);
@@ -106,9 +165,10 @@ const Login = () => {
               showConfirmButton: false,
               background: "linear-gradient(135deg, #E0E7FF 0%, #F3E8FF 100%)",
               customClass: {
-                popup: 'rounded-2xl shadow-2xl border-2 border-indigo-200',
-                timerProgressBar: 'bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500'
-              }
+                popup: "rounded-2xl shadow-2xl border-2 border-indigo-200",
+                timerProgressBar:
+                  "bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500",
+              },
             });
             setShowChangePassword(false);
           }}
@@ -116,14 +176,10 @@ const Login = () => {
       )}
 
       {/* Main Container with Blue/Purple Gradient */}
-<div className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-hidden 
-  bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
-
-
-  
-
-
-
+      <div
+        className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-hidden 
+  bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50"
+      >
         {/* Animated Gradient Orbs */}
         {/* <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-48 -left-48 w-96 h-96 bg-gradient-to-br from-blue-300/40 to-indigo-400/40 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
@@ -139,25 +195,24 @@ const Login = () => {
         </div>
 
         {/* Subtle Grid Pattern */}
-        <div className="absolute inset-0 opacity-[0.02]"
+        <div
+          className="absolute inset-0 opacity-[0.02]"
           style={{
             backgroundImage: `
               linear-gradient(to right, #6366f1 1px, transparent 1px),
               linear-gradient(to bottom, #6366f1 1px, transparent 1px)
             `,
-            backgroundSize: '40px 40px'
-          }}>
-        </div>
+            backgroundSize: "40px 40px",
+          }}
+        ></div>
 
         {/* Main Card Container */}
         <div className="relative z-10 w-full max-w-lg">
-          
           {/* Glass Morphism Card */}
           <div className="relative backdrop-blur-2xl bg-white/80 rounded-3xl p-12 shadow-[0_8px_32px_rgba(99,102,241,0.15)] border border-white/50 overflow-hidden">
-            
             {/* Top Gradient Bar */}
             <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 animate-gradient"></div>
-            
+
             {/* Decorative Circles */}
             <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-full blur-2xl"></div>
             <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-br from-blue-400/10 to-indigo-400/10 rounded-full blur-2xl"></div>
@@ -168,12 +223,12 @@ const Login = () => {
                 <div className="relative group cursor-pointer">
                   {/* Animated Glow Ring */}
                   {/* <div className="absolute -inset-3 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-3xl blur-xl opacity-60 group-hover:opacity-100 transition duration-500 animate-pulse-glow"></div> */}
-                  
+
                   {/* Logo Container */}
                   <div className="relative bg-white p-7 rounded-3xl shadow-2xl ring-1 ring-indigo-100 transform group-hover:scale-105 transition-all duration-300">
-                    <img 
-                      src="/micrologic_logo.png" 
-                      alt="Micrologic Logo" 
+                    <img
+                      src="/micrologic_logo.png"
+                      alt="Micrologic Logo"
                       className="w-28 h-24 object-contain"
                     />
                     {/* Corner Decorations */}
@@ -188,11 +243,11 @@ const Login = () => {
                 <div className="flex items-center justify-center mb-4">
                   <Sparkles className="w-5 h-5 text-indigo-500 mr-2 animate-pulse" />
                   <h1 className="text-4xl font-extrabold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                    Welcome 
+                    Welcome
                   </h1>
                   <Sparkles className="w-5 h-5 text-purple-500 ml-2 animate-pulse animation-delay-1000" />
                 </div>
-                
+
                 <p className="text-slate-600 font-medium mb-4">
                   Sign in to access your account
                 </p>
@@ -211,10 +266,20 @@ const Login = () => {
                   <div className="absolute inset-0 bg-red-200 rounded-2xl blur-lg opacity-50"></div>
                   <div className="relative bg-gradient-to-r from-red-50 to-rose-50 border-l-4 border-red-500 px-5 py-4 rounded-2xl shadow-lg">
                     <div className="flex items-start">
-                      <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
+                      <svg
+                        className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
                       </svg>
-                      <p className="ml-3 text-sm font-semibold text-red-800">{error}</p>
+                      <p className="ml-3 text-sm font-semibold text-red-800">
+                        {error}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -222,7 +287,6 @@ const Login = () => {
 
               {/* Login Form */}
               <form onSubmit={handleSubmit} className="space-y-6">
-                
                 {/* Email Field */}
                 <div className="group">
                   <label className="flex items-center text-sm font-bold text-slate-700 mb-3 ml-1">
@@ -304,27 +368,43 @@ const Login = () => {
                   disabled={loading}
                   className={`relative w-full py-4 mt-8 rounded-2xl font-bold text-base 
                     transition-all duration-300 transform overflow-hidden group/btn
-                    ${loading
-                      ? "bg-slate-400 cursor-not-allowed text-white shadow-lg"
-                      : "bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-xl shadow-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-600/60 hover:scale-[1.02] active:scale-[0.98]"
+                    ${
+                      loading
+                        ? "bg-slate-400 cursor-not-allowed text-white shadow-lg"
+                        : "bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-xl shadow-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-600/60 hover:scale-[1.02] active:scale-[0.98]"
                     }`}
                 >
                   {/* Animated Gradient Overlay */}
                   {!loading && (
                     <>
                       <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
-                      
+
                       {/* Shimmer Effect */}
                       <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"></div>
                     </>
                   )}
-                  
+
                   <span className="relative z-10 flex items-center justify-center">
                     {loading ? (
                       <>
-                        <svg className="animate-spin h-6 w-6 mr-3" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="animate-spin h-6 w-6 mr-3"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
                         </svg>
                         Signing you in...
                       </>
@@ -340,24 +420,23 @@ const Login = () => {
               </form>
 
               {/* Security Badge */}
-<div className="mt-8 relative">
-  <div className="absolute inset-0 bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl blur-sm"></div>
+              <div className="mt-8 relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-100 to-purple-100 rounded-2xl blur-sm"></div>
 
-  <div className="relative flex flex-col items-center justify-center px-5 py-4 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 border border-indigo-100 shadow-sm">
-    <div className="flex items-center space-x-2">
-      <Shield className="w-5 h-5 text-indigo-600" />
-      <span className="text-xs font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">
-        256-bit SSL Secured • Your data is encrypted
-      </span>
-    </div>
+                <div className="relative flex flex-col items-center justify-center px-5 py-4 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 border border-indigo-100 shadow-sm">
+                  <div className="flex items-center space-x-2">
+                    <Shield className="w-5 h-5 text-indigo-600" />
+                    <span className="text-xs font-bold bg-gradient-to-r from-blue-700 to-purple-700 bg-clip-text text-transparent">
+                      256-bit SSL Secured • Your data is encrypted
+                    </span>
+                  </div>
 
-    {/* COPYRIGHT ADDED HERE */}
-    <p className="text-[14px] text-slate-800 mt-2">
-      © 2025 Micrologic. All rights reserved.
-    </p>
-  </div>
-</div>
-
+                  {/* COPYRIGHT ADDED HERE */}
+                  <p className="text-[14px] text-slate-800 mt-2">
+                    © 2025 Micrologic. All rights reserved.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 

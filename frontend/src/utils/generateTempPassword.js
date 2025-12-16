@@ -1,3 +1,4 @@
+// utils\generateTempPassword.js
 export const generateTempPassword = () => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%";
   let pwd = "";
