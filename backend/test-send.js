@@ -1,4 +1,4 @@
-// test-send.js
+// backend\test-send.js
 import 'dotenv/config';
 import { sendMail } from './graph-mail.js';
 

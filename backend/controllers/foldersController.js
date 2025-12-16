@@ -11,6 +11,7 @@ const CUSTOMER_ALLOWED_FOLDERS = [
   "User Manual",
   "M O M",
   "Dispatch Clearance",
+  "I & C", // ✅ ADD THIS
 ];
 
 // only  folders of customer need to be appear for action
@@ -24,15 +25,16 @@ export const getFoldersByProject = async (req, res) => {
 
     if (role === "admin" || role === "techsales") {
       query = `
-        SELECT id, name, parent_id, project_id,
-               customer_can_view, customer_can_download,
-               customer_can_upload, customer_can_delete,
-               created_at
-        FROM folders
-        WHERE project_id = $1
-          AND deleted_at IS NULL
-        ORDER BY name ASC
-      `;
+    SELECT id, name, parent_id, project_id,
+           customer_can_view, customer_can_download,
+           customer_can_upload, customer_can_delete,
+           created_at
+    FROM folders
+    WHERE project_id = $1
+      AND parent_id IS NULL
+      AND deleted_at IS NULL
+    ORDER BY name ASC
+  `;
       params = [projectId];
     } else if (role === "customer") {
       query = `

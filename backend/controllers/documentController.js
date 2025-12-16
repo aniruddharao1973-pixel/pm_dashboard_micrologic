@@ -24,7 +24,7 @@ import { insertEmailLog } from "../models/emailLogModel.js";
 export const uploadDocument = async (req, res) => {
   const { projectId, folderId, title, description, comment } = req.body;
 
-    // 🔒 CUSTOMER UPLOAD PERMISSION CHECK
+  // 🔒 CUSTOMER UPLOAD PERMISSION CHECK
   if (req.user.role === "customer") {
     const permRes = await pool.query(
       `
@@ -51,7 +51,6 @@ export const uploadDocument = async (req, res) => {
       });
     }
   }
-
 
   if (!req.file) {
     return res.status(400).json({ message: "No file uploaded" });
@@ -340,7 +339,7 @@ export const getDocumentVersions = async (req, res) => {
 export const deleteDocument = async (req, res) => {
   const documentId = req.params.documentId.trim();
 
-    // 🔒 CUSTOMER DELETE BLOCK (Recycle Bin not allowed)
+  // 🔒 CUSTOMER DELETE BLOCK (Recycle Bin not allowed)
   if (req.user.role === "customer") {
     console.log("[DELETE BLOCKED]", {
       role: req.user.role,

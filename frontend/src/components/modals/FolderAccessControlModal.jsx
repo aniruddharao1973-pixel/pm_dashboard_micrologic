@@ -274,6 +274,8 @@
 
 // export default FolderAccessControlModal;
 
+
+
 // modals/FolderAccessControlModal.jsx
 import React, { useEffect, useState } from "react";
 import { X, Save, ShieldCheck } from "lucide-react";
@@ -368,7 +370,7 @@ const FolderAccessControlModal = ({ open, onClose, projectId }) => {
               project.
             </p>
             <p className="mt-3 text-sm text-gray-500 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-              💡 Please navigate to a project and try again.
+              💡 Please navigate to the Projects folder to continue.
             </p>
           </div>
 

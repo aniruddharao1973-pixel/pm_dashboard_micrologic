@@ -25,11 +25,11 @@ const { isUUID } = validatorPkg;
  *   router.get('/folder/:folderId', authMiddleware, authorizeResource, controller)
  */
 export default async function authorizeResource(req, res, next) {
-      console.log("----- AUTHORIZE RESOURCE -----");
-    console.log("URL:", req.originalUrl);
-    console.log("User:", req.user);
-    console.log("Params:", req.params);
-    console.log("Query:", req.query);
+  console.log("----- AUTHORIZE RESOURCE -----");
+  console.log("URL:", req.originalUrl);
+  console.log("User:", req.user);
+  console.log("Params:", req.params);
+  console.log("Query:", req.query);
 
   try {
     const user = req.user;
@@ -41,47 +41,51 @@ export default async function authorizeResource(req, res, next) {
       return next();
     }
 
-
     // normalize candidate ids from params or query
-const folderId =
-  req.params.folderId ||
-  req.params.folder_id ||
-  req.query.folderId ||
-  req.query.folder_id;
+    const folderId =
+      req.params.folderId ||
+      req.params.folder_id ||
+      req.query.folderId ||
+      req.query.folder_id;
 
-const documentId =
-  req.params.documentId ||
-  req.params.document_id ||
-  req.params.id ||
-  req.query.documentId ||
-  req.query.document_id;
+    const documentId =
+      req.params.documentId ||
+      req.params.document_id ||
+      req.params.id ||
+      req.query.documentId ||
+      req.query.document_id;
 
-const versionId =
-  req.params.versionId ||
-  req.params.version_id ||
-  req.query.versionId ||
-  req.query.version_id;
+    const versionId =
+      req.params.versionId ||
+      req.params.version_id ||
+      req.query.versionId ||
+      req.query.version_id;
 
-const projectId =
-  req.params.projectId ||
-  req.params.project_id ||
-  req.query.projectId ||
-  req.query.project_id;
+    const projectId =
+      req.params.projectId ||
+      req.params.project_id ||
+      req.query.projectId ||
+      req.query.project_id;
 
-console.log("Normalized IDs =>", {
-  folderId,
-  documentId,
-  versionId,
-  projectId
-});
-
+    console.log("Normalized IDs =>", {
+      folderId,
+      documentId,
+      versionId,
+      projectId,
+    });
 
     // best-effort audit log inserter (non-blocking)
-// best-effort audit log inserter (non-blocking)
-const auditLog = async ({ user_id, action, entity_type, entity_id, meta = null }) => {
-  try {
-    await pool.query(
-      `
+    // best-effort audit log inserter (non-blocking)
+    const auditLog = async ({
+      user_id,
+      action,
+      entity_type,
+      entity_id,
+      meta = null,
+    }) => {
+      try {
+        await pool.query(
+          `
       INSERT INTO audit_logs (
         user_id,
         action,
@@ -93,24 +97,22 @@ const auditLog = async ({ user_id, action, entity_type, entity_id, meta = null }
       )
       VALUES ($1, $2, $3, $4, $5, $6, now())
       `,
-      [
-        user_id,
-        action,
-        entity_type,
-        entity_id,
-        meta,
-        req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
-        req.socket?.remoteAddress ||
-        req.ip
-      ]
-
-    );
-  } catch (e) {
-    // never block authorization because of audit logging
-    console.warn("audit log failed:", e?.message || e);
-  }
-};
-
+          [
+            user_id,
+            action,
+            entity_type,
+            entity_id,
+            meta,
+            req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+              req.socket?.remoteAddress ||
+              req.ip,
+          ]
+        );
+      } catch (e) {
+        // never block authorization because of audit logging
+        console.warn("audit log failed:", e?.message || e);
+      }
+    };
 
     // helper to check equality (null-safe)
     const companyMatches = (resourceCompanyId) => {
@@ -121,9 +123,10 @@ const auditLog = async ({ user_id, action, entity_type, entity_id, meta = null }
 
     // 1) versionId (document_versions) — protects download routes
     if (versionId) {
-  console.log("🔍 Checking VERSION access:", versionId);
+      console.log("🔍 Checking VERSION access:", versionId);
 
-      if (!isUUID(versionId)) return res.status(400).json({ error: "Invalid version id" });
+      if (!isUUID(versionId))
+        return res.status(400).json({ error: "Invalid version id" });
 
       const q = `
         SELECT 
@@ -140,18 +143,24 @@ const auditLog = async ({ user_id, action, entity_type, entity_id, meta = null }
       `;
 
       const { rows } = await pool.query(q, [versionId]);
-      if (!rows.length) return res.status(404).json({ error: "Version not found" });
+      if (!rows.length)
+        return res.status(404).json({ error: "Version not found" });
 
       if (!companyMatches(rows[0].company_id)) {
         await auditLog({
-        user_id: user.id,
-        action: "ACCESS_DENIED",
-        entity_type: "document",
-        entity_id: documentId,
-        meta: { reason: "company_mismatch" }
-      });
+          user_id: user.id,
+          action: "ACCESS_DENIED",
+          entity_type: "document",
+          entity_id: documentId,
+          meta: { reason: "company_mismatch" },
+        });
 
-        console.log("❌ VERSION ACCESS DENIED: User company", user.company_id, "≠", rows[0].company_id);
+        console.log(
+          "❌ VERSION ACCESS DENIED: User company",
+          user.company_id,
+          "≠",
+          rows[0].company_id
+        );
         return accessDenied(res);
       }
 
@@ -162,9 +171,10 @@ const auditLog = async ({ user_id, action, entity_type, entity_id, meta = null }
 
     // 2) documentId
     if (documentId) {
-    console.log("🔍 Checking DOCUMENT access:", documentId);
+      console.log("🔍 Checking DOCUMENT access:", documentId);
 
-      if (!isUUID(documentId)) return res.status(400).json({ error: "Invalid document id" });
+      if (!isUUID(documentId))
+        return res.status(400).json({ error: "Invalid document id" });
 
       const q = `
         SELECT d.id AS document_id, d.folder_id, f.project_id, p.company_id
@@ -174,18 +184,24 @@ const auditLog = async ({ user_id, action, entity_type, entity_id, meta = null }
         WHERE d.id = $1
       `;
       const { rows } = await pool.query(q, [documentId]);
-      if (!rows.length) return res.status(404).json({ error: "Document not found" });
+      if (!rows.length)
+        return res.status(404).json({ error: "Document not found" });
 
       if (!companyMatches(rows[0].company_id)) {
         await auditLog({
-        user_id: user.id,
-        action: "ACCESS_DENIED",
-        entity_type: "document",
-        entity_id: documentId,
-        meta: { reason: "company_mismatch" }
-      });
+          user_id: user.id,
+          action: "ACCESS_DENIED",
+          entity_type: "document",
+          entity_id: documentId,
+          meta: { reason: "company_mismatch" },
+        });
 
-        console.log("❌ DOCUMENT ACCESS DENIED: User company", user.company_id, "≠", rows[0].company_id);
+        console.log(
+          "❌ DOCUMENT ACCESS DENIED: User company",
+          user.company_id,
+          "≠",
+          rows[0].company_id
+        );
         return accessDenied(res);
       }
 
@@ -195,57 +211,74 @@ const auditLog = async ({ user_id, action, entity_type, entity_id, meta = null }
     }
 
     // 3) folderId
-// 3) folderId
-if (folderId) {
-  console.log("🔍 Checking FOLDER access:", folderId);
+    // 3) folderId
+    if (folderId) {
+      console.log("🔍 Checking FOLDER access:", folderId);
 
-  if (!isUUID(folderId)) return res.status(400).json({ error: "Invalid folder id" });
+      if (!isUUID(folderId))
+        return res.status(400).json({ error: "Invalid folder id" });
 
-  const q = `
+      const q = `
         SELECT f.id AS folder_id, f.project_id, p.company_id
         FROM folders f
         JOIN projects p ON p.id = f.project_id
         WHERE f.id = $1
       `;
-  const { rows } = await pool.query(q, [folderId]);
-  if (!rows.length) return res.status(404).json({ error: "Folder not found" });
+      const { rows } = await pool.query(q, [folderId]);
+      if (!rows.length)
+        return res.status(404).json({ error: "Folder not found" });
 
-  if (!companyMatches(rows[0].company_id)) {
-    console.log("❌ FOLDER ACCESS DENIED: User company", user.company_id, "≠", rows[0].company_id);
-    await auditLog({
-      user_id: user.id,
-      action: "ACCESS_DENIED",
-      entity_type: "document",
-      entity_id: documentId,
-      meta: { reason: "company_mismatch" }
-    });
+      if (!companyMatches(rows[0].company_id)) {
+        console.log(
+          "❌ FOLDER ACCESS DENIED: User company",
+          user.company_id,
+          "≠",
+          rows[0].company_id
+        );
+        await auditLog({
+          user_id: user.id,
+          action: "ACCESS_DENIED",
+          entity_type: "document",
+          entity_id: documentId,
+          meta: { reason: "company_mismatch" },
+        });
 
-    return accessDenied(res);
-  }
+        return accessDenied(res);
+      }
 
-  req.folder = rows[0];
-  console.log("✅ FOLDER ACCESS GRANTED");
-  return next();
-}
+      req.folder = rows[0];
+      console.log("✅ FOLDER ACCESS GRANTED");
+      return next();
+    }
 
     // 4) projectId
     if (projectId) {
-  console.log("🔍 Checking PROJECT access:", projectId);
-      if (!isUUID(projectId)) return res.status(400).json({ error: "Invalid project id" });
+      console.log("🔍 Checking PROJECT access:", projectId);
+      if (!isUUID(projectId))
+        return res.status(400).json({ error: "Invalid project id" });
 
-      const { rows } = await pool.query(`SELECT id, company_id FROM projects WHERE id = $1`, [projectId]);
-      if (!rows.length) return res.status(404).json({ error: "Project not found" });
+      const { rows } = await pool.query(
+        `SELECT id, company_id FROM projects WHERE id = $1`,
+        [projectId]
+      );
+      if (!rows.length)
+        return res.status(404).json({ error: "Project not found" });
 
       if (!companyMatches(rows[0].company_id)) {
         await auditLog({
-        user_id: user.id,
-        action: "ACCESS_DENIED",
-        entity_type: "document",
-        entity_id: documentId,
-        meta: { reason: "company_mismatch" }
-      });
+          user_id: user.id,
+          action: "ACCESS_DENIED",
+          entity_type: "document",
+          entity_id: documentId,
+          meta: { reason: "company_mismatch" },
+        });
 
-        console.log("❌ PROJECT ACCESS DENIED: User company", user.company_id, "≠", rows[0].company_id);
+        console.log(
+          "❌ PROJECT ACCESS DENIED: User company",
+          user.company_id,
+          "≠",
+          rows[0].company_id
+        );
         return accessDenied(res);
       }
 

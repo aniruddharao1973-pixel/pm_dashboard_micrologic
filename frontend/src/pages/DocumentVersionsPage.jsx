@@ -88,9 +88,6 @@
 
 // export default DocumentVersionsPage;
 
-
-
-
 // // src/pages/DocumentVersionsPage.jsx
 // import React, { useEffect, useState } from "react";
 // import { useParams } from "react-router-dom";
@@ -137,12 +134,12 @@
 //           {versions.map((v) => (
 //             <div
 //               key={v.id}
-//               className="bg-white border border-gray-200 p-5 rounded-xl shadow-sm 
+//               className="bg-white border border-gray-200 p-5 rounded-xl shadow-sm
 //                          flex items-center justify-between hover:shadow-md transition"
 //             >
 //               <div className="flex items-center gap-4">
 //                 {/* Version Badge */}
-//                 <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 
+//                 <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500
 //                                 text-white flex items-center justify-center font-bold shadow">
 //                   {v.version_number}
 //                 </div>
@@ -162,7 +159,7 @@
 //               <a
 //                 href={`http://localhost:5000${v.file_path}`}
 //                 download={v.filename}
-//                 className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm 
+//                 className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm
 //                            hover:bg-blue-700 transition flex items-center gap-2"
 //               >
 //                 <svg className="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -179,8 +176,6 @@
 // };
 
 // export default DocumentVersionsPage;
-
-
 
 // src/pages/DocumentVersionsPage.jsx
 import React, { useEffect, useState } from "react";
@@ -216,8 +211,12 @@ const DocumentVersionsPage = () => {
     <div className="space-y-6 sm:space-y-8 p-4 sm:p-6 md:p-8">
       {/* Title */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Document Versions</h1>
-        <p className="text-sm sm:text-base text-gray-600 mt-1">Complete version history of this file.</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+          Document Versions
+        </h1>
+        <p className="text-sm sm:text-base text-gray-600 mt-1">
+          Complete version history of this file.
+        </p>
       </div>
 
       {/* Version List */}
@@ -234,10 +233,12 @@ const DocumentVersionsPage = () => {
             >
               <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
                 {/* Version Badge */}
-                <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl 
+                <div
+                  className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl 
                                 bg-gradient-to-br from-purple-500 to-blue-500 
                                 text-white flex items-center justify-center 
-                                font-bold shadow text-sm sm:text-base flex-shrink-0">
+                                font-bold shadow text-sm sm:text-base flex-shrink-0"
+                >
                   {v.version_number}
                 </div>
 
@@ -261,7 +262,11 @@ const DocumentVersionsPage = () => {
                            hover:bg-blue-700 transition flex items-center justify-center 
                            sm:justify-start gap-2"
               >
-                <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path d="M3 14a2 2 0 002 2h10a2 2 0 002-2v-1H3v1zm4-5l3 3 3-3h-2V3H9v6H7z" />
                 </svg>
                 Download

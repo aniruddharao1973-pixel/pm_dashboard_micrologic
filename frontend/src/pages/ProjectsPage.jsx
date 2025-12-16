@@ -151,6 +151,7 @@
 
 // export default ProjectsPage;
 
+
 // frontend/src/pages/ProjectsPage.jsx
 import React, { useEffect, useState } from "react";
 import { useProjectsApi } from "../api/projectsApi";
@@ -297,7 +298,7 @@ const ProjectsPage = () => {
           scrollbarColor: "rgba(139, 92, 246, 0.3) transparent",
         }}
       >
-        <style jsx>{`
+        <style>{`
           div::-webkit-scrollbar {
             width: 8px;
           }

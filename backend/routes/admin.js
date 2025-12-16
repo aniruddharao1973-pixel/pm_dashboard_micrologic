@@ -1,7 +1,3 @@
-
-
-
-
 // backend/routes/admin.js
 import express from "express";
 
@@ -13,15 +9,16 @@ import {
   getCustomerById,
   getCompanyProfile,
   updateCustomerProfile,
-  deleteCompany,   
+  deleteCompany,
   deleteProject,
-  getProjects 
+  getProjects,
 } from "../controllers/adminController.js";
 
-
 // import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
-import { authMiddleware, requireAdminOrTechSales } from "../middleware/authMiddleware.js";
-
+import {
+  authMiddleware,
+  requireAdminOrTechSales,
+} from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -58,12 +55,7 @@ router.post(
 /* ---------------------------------------------------
    4️⃣ Get All Customers
 --------------------------------------------------- */
-router.get(
-  "/customers",
-  authMiddleware,
-  requireAdminOrTechSales,
-  getCustomers
-);
+router.get("/customers", authMiddleware, requireAdminOrTechSales, getCustomers);
 
 /* ---------------------------------------------------
    5️⃣ Get Customer + Company + Projects
@@ -105,16 +97,10 @@ router.delete(
   deleteCompany
 );
 
-
-  /* ---------------------------------------------------
+/* ---------------------------------------------------
     🔍 Get All Projects (Admin + Tech Sales)
   --------------------------------------------------- */
-  router.get(
-    "/projects",
-    authMiddleware,
-    requireAdminOrTechSales,
-    getProjects
-  );
+router.get("/projects", authMiddleware, requireAdminOrTechSales, getProjects);
 
 /* ---------------------------------------------------
    Delete Single Project
@@ -122,9 +108,8 @@ router.delete(
 router.delete(
   "/project/:projectId",
   authMiddleware,
- requireAdminOrTechSales,
+  requireAdminOrTechSales,
   deleteProject
 );
-
 
 export default router;
