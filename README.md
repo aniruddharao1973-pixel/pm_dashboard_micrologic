@@ -12,7 +12,6 @@ pm_dashboard_micrologic/
 ├── frontend/ # React (Vite) application
 ├── .gitignore
 └── README.md
-
 Tech Stack
 
 Backend
