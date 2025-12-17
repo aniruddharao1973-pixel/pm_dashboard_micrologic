@@ -6,17 +6,35 @@ import { useAdminApi } from "../../api/adminApi";
 function CustomerListForProjects() {
   const { getCustomers } = useAdminApi();
   const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const navigate = useNavigate();
 
   useEffect(() => {
+    let mounted = true;
+
     (async () => {
       try {
+        setLoading(true);
         const res = await getCustomers();
-        setCustomers(res.data || []);
+        if (mounted) {
+          setCustomers(res.data || []);
+        }
       } catch (err) {
         console.error("Error loading customers", err);
+        if (mounted) {
+          setCustomers([]);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
     })();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
@@ -43,6 +61,71 @@ function CustomerListForProjects() {
             </h1>
           </div>
         </div>
+        {/* 🔄 Loading Spinner */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-20 sm:py-28 gap-6">
+            <div className="relative w-20 h-20">
+              {/* outer glow pulse */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 blur-xl opacity-40 animate-pulse" />
+
+              {/* middle glow ring */}
+              <div className="absolute inset-2 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 blur-lg opacity-50" />
+
+              {/* outer spinning ring */}
+              <div
+                className="
+                  absolute inset-0 w-20 h-20 rounded-full
+                  border-[3px] border-transparent
+                  border-t-blue-500
+                  border-r-purple-500
+                  animate-spin
+                "
+                style={{ animationDuration: "1.5s" }}
+              />
+
+              {/* inner counter-spinning ring */}
+              <div
+                className="
+                  absolute inset-3 w-14 h-14 rounded-full
+                  border-[3px] border-transparent
+                  border-b-indigo-600
+                  border-l-purple-500
+                  animate-spin
+                "
+                style={{
+                  animationDuration: "1s",
+                  animationDirection: "reverse",
+                }}
+              />
+
+              {/* center dot with pulse */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 animate-pulse" />
+              </div>
+            </div>
+
+            {/* Loading text with gradient and animation */}
+            <div className="flex flex-col items-center gap-2">
+              <h3 className="text-xl sm:text-2xl font-semibold bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent animate-pulse">
+                Loading Customers
+              </h3>
+              <div className="flex gap-1">
+                <span
+                  className="w-2 h-2 rounded-full bg-blue-500 animate-bounce"
+                  style={{ animationDelay: "0ms" }}
+                />
+                <span
+                  className="w-2 h-2 rounded-full bg-purple-500 animate-bounce"
+                  style={{ animationDelay: "150ms" }}
+                />
+                <span
+                  className="w-2 h-2 rounded-full bg-indigo-600 animate-bounce"
+                  style={{ animationDelay: "300ms" }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Grid of customer cards - Responsive columns and gaps */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
@@ -232,7 +315,7 @@ function CustomerListForProjects() {
         </div>
 
         {/* empty state - Responsive sizes */}
-        {customers.length === 0 && (
+        {!loading && customers.length === 0 && (
           <div className="text-center py-12 sm:py-16 md:py-20">
             <div
               className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 

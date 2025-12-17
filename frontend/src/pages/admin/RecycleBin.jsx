@@ -217,8 +217,8 @@ export default function RecycleBin() {
       <div className="p-8">
         {documents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="p-6 bg-white rounded-2xl shadow-sm mb-6">
-              <Trash2 className="h-16 w-16 text-gray-300" />
+            <div className="p-6 bg-blue-400 rounded-2xl shadow-sm mb-6">
+              <Trash2 className="h-16 w-16 text-gray-200" />
             </div>
             <h3 className="text-xl font-semibold text-gray-700 mb-2">
               Recycle Bin is Empty

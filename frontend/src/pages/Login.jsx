@@ -83,10 +83,10 @@ const Login = () => {
           icon: "warning",
           title: "Reset Password?",
           html: `
-        <p class="text-slate-700 font-medium">
+        <p class="text-red-500 font-medium">
           You’ve entered an incorrect password multiple times.
         </p>
-        <p class="text-indigo-600 font-semibold mt-2">
+        <p class="text-indigo-900 font-semibold mt-2">
           Would you like to reset your password?
         </p>
       `,

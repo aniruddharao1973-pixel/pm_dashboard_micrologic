@@ -15,7 +15,7 @@ export const useFoldersApi = () => {
    * Get root folders for a project
    * - Customer role is filtered by backend
    * - Includes customer_can_* flags
-   */
+   */ 
   const getFoldersByProject = (projectId) => {
     return api.get(`/folders/${projectId}`);
   };

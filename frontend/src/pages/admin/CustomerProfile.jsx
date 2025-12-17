@@ -4,6 +4,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAdminApi } from "../../api/adminApi";
 import { useAuth } from "../../hooks/useAuth"; // <-- ADD THIS
 import Swal from "sweetalert2";
+import Breadcrumb from "../../components/Breadcrumb";
 
 export default function CustomerProfile() {
   const { companyId } = useParams();
@@ -194,27 +195,18 @@ export default function CustomerProfile() {
     >
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb */}
-        <nav className="mb-4 sm:mb-6">
-          <p className="text-xs sm:text-sm text-gray-600 font-medium">
-            {/* "Customers" label always static */}
-            <span className="cursor-default">Customers</span>
-            <span className="text-gray-400 mx-1 sm:mx-2">›</span>
-
-            {/* If user is admin, show company name (unchanged). If customer, link to /projects */}
-            {isAdminLike ? (
-              <span className="text-gray-900 font-semibold">
-                {company.name}
-              </span>
-            ) : (
-              <Link
-                to="/projects"
-                className="text-indigo-600 font-semibold underline-offset-2 hover:underline"
-              >
-                {company.name}
-              </Link>
-            )}
-          </p>
-        </nav>
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            {
+              label: "Customers",
+              to: "/admin/customers",
+            },
+            {
+              label: company.name,
+            },
+          ]}
+        />
 
         {/* Hero / Top Card */}
         <header className="mb-6 sm:mb-10">

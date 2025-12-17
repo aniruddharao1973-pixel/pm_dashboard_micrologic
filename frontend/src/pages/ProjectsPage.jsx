@@ -381,13 +381,13 @@ const ProjectsPage = () => {
                 <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
                   No Projects Yet
                 </h3>
-                <p className="text-gray-500 text-base sm:text-lg leading-relaxed">
+                {/* <p className="text-gray-500 text-base sm:text-lg leading-relaxed">
                   Start by creating your first project to organize and track
                   your work efficiently.
-                </p>
+                </p> */}
 
                 {/* Call to action button */}
-                <button className="mt-6 px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2 mx-auto">
+                {/* <button className="mt-6 px-8 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2 mx-auto">
                   <svg
                     className="w-5 h-5"
                     fill="none"
@@ -402,7 +402,7 @@ const ProjectsPage = () => {
                     />
                   </svg>
                   Create First Project
-                </button>
+                </button> */}
               </div>
             </div>
           ) : (
