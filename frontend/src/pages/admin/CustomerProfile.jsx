@@ -306,12 +306,15 @@ export default function CustomerProfile() {
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 overflow-hidden">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 overflow-hidden">
                 {projects.map((project) => (
                   <article
                     key={project.id}
                     onClick={() => navigate(`/projects/${project.id}/folders`)}
-                    className="group cursor-pointer relative bg-white rounded-xl sm:rounded-xl p-5 sm:p-6 border border-gray-200 shadow-sm hover:shadow-lg transition transform hover:-translate-y-1 overflow-hidden"
+                    className="group cursor-pointer relative bg-white rounded-xl p-5 sm:p-6
+           border border-gray-200 shadow-sm hover:shadow-lg transition
+           transform hover:-translate-y-1 overflow-hidden
+           w-full"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">

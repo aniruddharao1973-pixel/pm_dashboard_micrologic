@@ -640,7 +640,7 @@ const Sidebar = ({ sidebarOpen, onClose }) => {
         <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#6366f1]/50 to-transparent pointer-events-none"></div>
       </aside>
 
-      <style jsx>{`
+      <style>{`
         @keyframes fade-in {
           from {
             opacity: 0;
