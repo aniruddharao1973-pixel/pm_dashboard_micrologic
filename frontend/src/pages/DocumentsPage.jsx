@@ -20,6 +20,22 @@ import Breadcrumb from "../components/Breadcrumb";
 import { useProjectsApi } from "../api/projectsApi";
 import { useAdminApi } from "../api/adminApi";
 
+import {
+  Building2,
+  Users,
+  FolderKanban,
+  ChevronRight,
+  Loader2,
+  Calendar,
+  Sparkles,
+  ArrowRight,
+  Building,
+  Clock,
+  TrendingUp,
+  Search,
+  Filter,
+} from "lucide-react";
+
 const DocumentsPage = () => {
   const [forbidden, setForbidden] = useState(false);
   const navigate = useNavigate();
@@ -197,12 +213,58 @@ const DocumentsPage = () => {
     }
   };
 
+  // -------------------------------
+  // LOADING UI
+  // -------------------------------
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="relative">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full border-4 border-gray-200"></div>
-          <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full border-4 border-blue-600 border-t-transparent animate-spin absolute top-0 left-0"></div>
+      <div
+        className="
+          w-full
+          min-h-screen lg:h-[calc(100vh-80px)]
+          bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/40
+          flex items-center justify-center
+          p-4 sm:p-6
+        "
+      >
+        <div className="text-center space-y-6">
+          {/* Animated Loader */}
+          <div className="relative inline-flex items-center justify-center">
+            {/* Outer pulsing ring */}
+            <div className="absolute w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 opacity-20 animate-ping"></div>
+
+            {/* Middle ring */}
+            <div className="absolute w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-indigo-200 animate-pulse"></div>
+
+            {/* Main loader */}
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-violet-600 flex items-center justify-center shadow-xl shadow-indigo-500/30">
+              <Building2 className="w-8 h-8 sm:w-10 sm:h-10 text-white animate-pulse" />
+            </div>
+
+            {/* Spinning outer ring */}
+            <div className="absolute w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-transparent border-t-indigo-500 border-r-purple-500 animate-spin"></div>
+          </div>
+
+          {/* Text */}
+          <div className="space-y-2">
+            <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              Loading Documents
+            </h2>
+            <p className="text-sm sm:text-base text-gray-500">
+              Fetching Documents and files...
+            </p>
+          </div>
+
+          {/* Loading dots */}
+          <div className="flex justify-center items-center gap-1.5">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 animate-bounce"
+                style={{ animationDelay: `${i * 150}ms` }}
+              />
+            ))}
+          </div>
         </div>
       </div>
     );

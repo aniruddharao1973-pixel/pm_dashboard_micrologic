@@ -58,11 +58,11 @@ export const useDocumentsApi = () => {
   const getCustomerRecycleBinDocuments = () =>
     api.get("/documents/recycle-bin/customer");
 
-  // Customer → request restore
-  const requestRestore = (documentId) =>
-    api.post(`/documents/${documentId}/request-restore`);
+  // ✅ UNIFIED — Document + Folder
+  const requestRestore = ({ id, type }) =>
+    api.post("/documents/request-restore", { id, type });
 
-  // Admin / TechSales → restore
+  // Admin / TechSales → restore document only
   const restoreDocument = (documentId) =>
     api.post(`/documents/${documentId}/restore`);
 

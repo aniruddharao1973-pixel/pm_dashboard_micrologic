@@ -151,12 +151,26 @@
 
 // export default ProjectsPage;
 
-
 // frontend/src/pages/ProjectsPage.jsx
 import React, { useEffect, useState } from "react";
 import { useProjectsApi } from "../api/projectsApi";
 import { useAuth } from "../hooks/useAuth";
 import ProjectCard from "../components/ProjectCard";
+import {
+  Building2,
+  Users,
+  FolderKanban,
+  ChevronRight,
+  Loader2,
+  Calendar,
+  Sparkles,
+  ArrowRight,
+  Building,
+  Clock,
+  TrendingUp,
+  Search,
+  Filter,
+} from "lucide-react";
 
 const ProjectsPage = () => {
   const { getAllProjects } = useProjectsApi();
@@ -181,100 +195,52 @@ const ProjectsPage = () => {
 
   if (loading) {
     return (
-      <div className="relative w-full h-[calc(100vh-80px)] flex items-center justify-center overflow-hidden">
-        {/* Animated background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-50 via-purple-50/30 to-indigo-50/40">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_transparent,_white_70%)]"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_transparent,_white_70%)]"></div>
-        </div>
+      <div
+        className="
+          w-full
+          min-h-screen lg:h-[calc(100vh-80px)]
+          bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/40
+          flex items-center justify-center
+          p-4 sm:p-6
+        "
+      >
+        <div className="text-center space-y-6">
+          {/* Animated Loader */}
+          <div className="relative inline-flex items-center justify-center">
+            {/* Outer pulsing ring */}
+            <div className="absolute w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 opacity-20 animate-ping"></div>
 
-        {/* Floating orbs animation */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-purple-200/30 to-indigo-200/30 rounded-full blur-3xl animate-pulse"></div>
-          <div
-            className="absolute -bottom-10 -left-10 w-60 h-60 bg-gradient-to-tr from-blue-200/30 to-purple-200/30 rounded-full blur-3xl animate-pulse"
-            style={{ animationDelay: "1s" }}
-          ></div>
-          <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-br from-indigo-200/20 via-purple-200/20 to-pink-200/20 rounded-full blur-3xl animate-pulse"
-            style={{ animationDelay: "0.5s" }}
-          ></div>
-        </div>
+            {/* Middle ring */}
+            <div className="absolute w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-indigo-200 animate-pulse"></div>
 
-        <div className="relative flex flex-col items-center space-y-6 p-8">
-          {/* Modern loading spinner */}
-          <div className="relative">
-            <div className="w-20 h-20 sm:w-24 sm:h-24">
-              {/* Gradient ring */}
-              <svg className="animate-spin" viewBox="0 0 100 100">
-                <defs>
-                  <linearGradient
-                    id="gradient"
-                    x1="0%"
-                    y1="0%"
-                    x2="100%"
-                    y2="100%"
-                  >
-                    <stop offset="0%" stopColor="#8B5CF6" stopOpacity="1" />
-                    <stop offset="50%" stopColor="#6366F1" stopOpacity="0.8" />
-                    <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.6" />
-                  </linearGradient>
-                </defs>
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  fill="none"
-                  stroke="url(#gradient)"
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                  strokeDasharray="200 100"
-                  className="drop-shadow-lg"
-                />
-              </svg>
-              {/* Center icon */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-xl animate-pulse">
-                  <svg
-                    className="w-5 h-5 sm:w-6 sm:h-6 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                    />
-                  </svg>
-                </div>
-              </div>
+            {/* Main loader */}
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-violet-600 flex items-center justify-center shadow-xl shadow-indigo-500/30">
+              <Building2 className="w-8 h-8 sm:w-10 sm:h-10 text-white animate-pulse" />
             </div>
+
+            {/* Spinning outer ring */}
+            <div className="absolute w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-transparent border-t-indigo-500 border-r-purple-500 animate-spin"></div>
           </div>
 
-          {/* Loading text with animation */}
-          <div className="text-center space-y-3">
-            <h3 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">
+          {/* Text */}
+          <div className="space-y-2">
+            <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               Loading Projects
-            </h3>
-            <div className="flex items-center space-x-1 justify-center">
-              <div
-                className="w-2 h-2 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full animate-bounce shadow-lg"
-                style={{ animationDelay: "0s" }}
-              ></div>
-              <div
-                className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full animate-bounce shadow-lg"
-                style={{ animationDelay: "0.15s" }}
-              ></div>
-              <div
-                className="w-2 h-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full animate-bounce shadow-lg"
-                style={{ animationDelay: "0.3s" }}
-              ></div>
-            </div>
-            <p className="text-sm text-gray-500 font-medium mt-2">
+            </h2>
+            <p className="text-sm sm:text-base text-gray-500">
               Fetching your projects...
             </p>
+          </div>
+
+          {/* Loading dots */}
+          <div className="flex justify-center items-center gap-1.5">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 animate-bounce"
+                style={{ animationDelay: `${i * 150}ms` }}
+              />
+            ))}
           </div>
         </div>
       </div>

@@ -11,11 +11,11 @@ import DocumentVersionsPage from "./pages/DocumentVersionsPage";
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import CustomerListForProjects from "./pages/admin/CustomerListForProjects";
 
-import CreateCustomer from "./pages/admin/CreateCustomer";
+// import CreateCustomer from "./pages/admin/CreateCustomer";
 import CustomerList from "./pages/admin/CustomerList";
 import CustomerProfile from "./pages/admin/CustomerProfile";
 import CreateProject from "./pages/admin/CreateProject";
-import EditCustomer from "./pages/admin/EditCustomer"; // add import
+// import EditCustomer from "./pages/admin/EditCustomer"; // add import
 import ForbiddenPage from "./pages/ForbiddenPage";
 
 import DashboardLayout from "./layouts/DashboardLayout.jsx";
@@ -29,6 +29,7 @@ import AdminRecycleBin from "./pages/admin/RecycleBin";
 import CustomerRecycleBin from "./pages/customer/RecycleBin";
 
 import ResetPassword from "./pages/ResetPassword";
+import SubFoldersPage from "./pages/SubFoldersPage";
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -127,7 +128,7 @@ const App = () => {
           }
         />
 
-        <Route
+        {/* <Route
           path="/admin/create-customer"
           element={
             <ProtectedRoute>
@@ -136,7 +137,7 @@ const App = () => {
               </DashboardLayout>
             </ProtectedRoute>
           }
-        />
+        /> */}
 
         <Route
           path="/admin/customers"
@@ -161,7 +162,7 @@ const App = () => {
         />
 
         {/* ⭐ ADD EDIT CUSTOMER ROUTE HERE */}
-        <Route
+        {/* <Route
           path="/admin/edit-customer/:companyId"
           element={
             <ProtectedRoute>
@@ -170,7 +171,7 @@ const App = () => {
               </DashboardLayout>
             </ProtectedRoute>
           }
-        />
+        /> */}
 
         <Route
           path="/admin/create-project/:customerId"
@@ -222,7 +223,7 @@ const App = () => {
           element={
             <ProtectedRoute>
               <DashboardLayout>
-                <FoldersPage />
+                <SubFoldersPage />
               </DashboardLayout>
             </ProtectedRoute>
           }

@@ -93,19 +93,22 @@ import React, { useState } from "react";
 import { Mail, X, FileText, AlertCircle, Clock } from "lucide-react";
 import { useDocumentsApi } from "../../api/documentsApi";
 
-const RestoreRequestModal = ({ isOpen, onClose, document }) => {
+const RestoreRequestModal = ({ isOpen, onClose, item }) => {
   // ✅ CORRECT: frontend API name
   const { requestRestore } = useDocumentsApi();
   const [loading, setLoading] = useState(false);
 
-  if (!isOpen || !document) return null;
+  if (!isOpen || !item) return null;
 
   const handleConfirm = async () => {
     try {
       setLoading(true);
 
       // ✅ CORRECT call
-      await requestRestore(document.id);
+      await requestRestore({
+        id: item.id,
+        type: item.type,
+      });
 
       onClose(true); // success flag
     } catch (err) {
@@ -119,16 +122,17 @@ const RestoreRequestModal = ({ isOpen, onClose, document }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm"
         onClick={() => onClose(false)}
       />
-      
+
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl w-full max-w-lg shadow-2xl 
+      <div
+        className="relative bg-white rounded-2xl w-full max-w-lg shadow-2xl 
                       transform transition-all duration-200 scale-100 
-                      mx-4 border border-gray-200">
-        
+                      mx-4 border border-gray-200"
+      >
         {/* Header with gradient */}
         <div className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-amber-500 to-orange-500 opacity-10" />
@@ -139,14 +143,15 @@ const RestoreRequestModal = ({ isOpen, onClose, document }) => {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-gray-900">
-                  Request Document Restore
+                  Request {item.type === "folder" ? "Folder" : "Document"}{" "}
+                  Restore
                 </h2>
                 <p className="text-xs text-gray-500 mt-0.5">
                   Send a restoration request to administrator
                 </p>
               </div>
             </div>
-            <button 
+            <button
               onClick={() => onClose(false)}
               className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors duration-150 group"
             >
@@ -165,35 +170,40 @@ const RestoreRequestModal = ({ isOpen, onClose, document }) => {
                 Restoration Request Process
               </p>
               <p className="text-xs text-blue-700 leading-relaxed">
-                You are requesting to restore the following document from the recycle bin. 
-                An administrator will review your request.
+                You are requesting to restore the following Item from the
+                recycle bin. An administrator will review your request.
               </p>
             </div>
           </div>
 
-          {/* Document Card */}
-          <div className="group relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 
+          {/* Document/Folder Card */}
+          <div
+            className="group relative overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 
                           border border-gray-200 rounded-xl p-4 transition-all duration-200
-                          hover:shadow-md hover:border-gray-300">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-amber-500/5 to-orange-500/5 
-                            rounded-full blur-2xl" />
-            
+                          hover:shadow-md hover:border-gray-300"
+          >
+            <div
+              className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-amber-500/5 to-orange-500/5 
+                            rounded-full blur-2xl"
+            />
+
             <div className="relative flex items-start gap-3">
               <div className="p-2 bg-white rounded-lg border border-gray-200 shadow-sm">
                 <FileText className="w-5 h-5 text-gray-600" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 text-base truncate">
-                  {document.title}
+                  {item.type === "folder" ? item.name : item.title}
                 </p>
+
                 <div className="flex items-center gap-4 mt-2">
                   <span className="inline-flex items-center gap-1.5">
                     <span className="text-xs text-gray-500">Project:</span>
                     <span className="text-xs font-medium text-gray-700">
-                      {document.project_name}
+                      {item.project_name}
                     </span>
                   </span>
-                  {document.deleted_at && (
+                  {item.deleted_at && (
                     <span className="inline-flex items-center gap-1.5">
                       <Clock className="w-3 h-3 text-gray-400" />
                       <span className="text-xs text-gray-500">
@@ -218,7 +228,9 @@ const RestoreRequestModal = ({ isOpen, onClose, document }) => {
                   <div className="w-0.5 h-full bg-gray-300" />
                 </div>
                 <div className="pb-3">
-                  <p className="text-sm font-medium text-gray-900">Request Sent</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    Request Sent
+                  </p>
                   <p className="text-xs text-gray-600 mt-0.5">
                     Your request will be emailed to the administrator
                   </p>
@@ -230,7 +242,9 @@ const RestoreRequestModal = ({ isOpen, onClose, document }) => {
                   <div className="w-0.5 h-full bg-gray-300" />
                 </div>
                 <div className="pb-3">
-                  <p className="text-sm font-medium text-gray-700">Admin Review</p>
+                  <p className="text-sm font-medium text-gray-700">
+                    Admin Review
+                  </p>
                   <p className="text-xs text-gray-600 mt-0.5">
                     Administrator will review and approve the request
                   </p>
@@ -241,9 +255,11 @@ const RestoreRequestModal = ({ isOpen, onClose, document }) => {
                   <div className="w-2 h-2 bg-gray-300 rounded-full" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Document Restored</p>
+                  <p className="text-sm font-medium text-gray-700">
+                    Item Restored
+                  </p>
                   <p className="text-xs text-gray-600 mt-0.5">
-                    Document will be restored to its original location
+                    Item will be restored to its original location
                   </p>
                 </div>
               </div>
@@ -255,7 +271,7 @@ const RestoreRequestModal = ({ isOpen, onClose, document }) => {
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-2xl">
           <div className="flex items-center justify-between">
             <p className="text-xs text-gray-500">
-              The document will remain in recycle bin until approved
+              The Item will remain in recycle bin until approved
             </p>
             <div className="flex items-center gap-3">
               <button
@@ -279,14 +295,20 @@ const RestoreRequestModal = ({ isOpen, onClose, document }) => {
                          flex items-center gap-2 group"
               >
                 <Mail className="w-4 h-4 group-hover:rotate-6 transition-transform duration-200" />
-                <span>{loading ? "Sending Request..." : "Send Restore Request"}</span>
-                
+                <span>
+                  {loading ? "Sending Request..." : "Send Restore Request"}
+                </span>
+
                 {/* Loading spinner overlay */}
                 {loading && (
-                  <div className="absolute inset-0 flex items-center justify-center 
-                                bg-amber-600/90 rounded-xl">
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white 
-                                  rounded-full animate-spin" />
+                  <div
+                    className="absolute inset-0 flex items-center justify-center 
+                                bg-amber-600/90 rounded-xl"
+                  >
+                    <div
+                      className="w-5 h-5 border-2 border-white/30 border-t-white 
+                                  rounded-full animate-spin"
+                    />
                   </div>
                 )}
               </button>

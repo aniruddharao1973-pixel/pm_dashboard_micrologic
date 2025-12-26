@@ -10,14 +10,14 @@ import {
   toggleDownload,
   getRecycleBinDocuments,
   getCustomerRecycleBinDocuments,
-  requestRestoreDocument,
   restoreDocument,
+  requestRestoreItem, // ✅ NEW
 } from "../controllers/documentController.js";
 
 import {
   authMiddleware,
   requireAdminOrTechSales,
-  requireRole
+  requireRole,
 } from "../middleware/authMiddleware.js";
 
 import * as commentsController from "../controllers/commentsController.js";
@@ -202,7 +202,6 @@ router.get(
   getRecycleBinDocuments
 );
 
-
 /* =====================================================================
    RECYCLE BIN — CUSTOMER (own company only)
 ===================================================================== */
@@ -215,15 +214,7 @@ router.get(
 /* ============================================================================
    CUSTOMER — REQUEST RESTORE (EMAIL ONLY)
 ============================================================================ */
-router.post(
-  "/:documentId/request-restore",
-  authMiddleware,
-  authorizeResource, // customer must own the document
-  (req, res) => {
-    req.params.documentId = req.params.documentId.trim();
-    requestRestoreDocument(req, res);
-  }
-);
+router.post("/request-restore", authMiddleware, requestRestoreItem);
 
 /* ============================================================================
    ADMIN / TECHSALES — RESTORE DOCUMENT
@@ -237,6 +228,5 @@ router.post(
     restoreDocument(req, res);
   }
 );
-
 
 export default router;

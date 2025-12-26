@@ -4,7 +4,6 @@ import express from "express";
 import {
   createCustomer,
   createProject,
-  createFolder,
   getCustomers,
   getCustomerById,
   getCompanyProfile,
@@ -40,16 +39,6 @@ router.post(
   authMiddleware,
   requireAdminOrTechSales,
   createProject
-);
-
-/* ---------------------------------------------------
-   3️⃣ Create Folder
---------------------------------------------------- */
-router.post(
-  "/create-folder",
-  authMiddleware,
-  requireAdminOrTechSales,
-  createFolder
 );
 
 /* ---------------------------------------------------

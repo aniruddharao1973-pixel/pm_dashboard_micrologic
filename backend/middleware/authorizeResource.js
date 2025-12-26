@@ -41,6 +41,45 @@ export default async function authorizeResource(req, res, next) {
       return next();
     }
 
+    // ⭐ HANDLE PERMISSIONS ROUTE (folderId → projectId resolution)
+    if (req.params.folderId && !req.params.projectId) {
+      const { rows } = await pool.query(
+        `
+    SELECT project_id
+    FROM folders
+    WHERE id = $1
+      AND deleted_at IS NULL
+    `,
+        [req.params.folderId]
+      );
+
+      if (!rows.length) {
+        return res.status(404).json({ error: "Folder not found" });
+      }
+
+      req.params.projectId = rows[0].project_id;
+    }
+
+    // ⭐ HANDLE SUB-FOLDER ROUTE (parentId → projectId resolution)
+    if (req.params.parentId && !req.params.projectId) {
+      const { rows } = await pool.query(
+        `
+    SELECT project_id
+    FROM folders
+    WHERE id = $1
+      AND deleted_at IS NULL
+    `,
+        [req.params.parentId]
+      );
+
+      if (!rows.length) {
+        return res.status(404).json({ error: "Parent folder not found" });
+      }
+
+      // Inject resolved projectId so the rest of the middleware works
+      req.params.projectId = rows[0].project_id;
+    }
+
     // normalize candidate ids from params or query
     const folderId =
       req.params.folderId ||
@@ -86,17 +125,17 @@ export default async function authorizeResource(req, res, next) {
       try {
         await pool.query(
           `
-      INSERT INTO audit_logs (
-        user_id,
-        action,
-        entity_type,
-        entity_id,
-        meta,
-        ip_address,
-        created_at
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, now())
-      `,
+        INSERT INTO audit_logs (
+          user_id,
+          action,
+          entity_type,
+          entity_id,
+          meta,
+          ip_address,
+          created_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, now())
+        `,
           [
             user_id,
             action,
@@ -129,18 +168,18 @@ export default async function authorizeResource(req, res, next) {
         return res.status(400).json({ error: "Invalid version id" });
 
       const q = `
-        SELECT 
-          dv.id AS version_id,
-          d.id AS document_id,
-          d.folder_id,
-          f.project_id,
-          p.company_id
-        FROM document_versions dv
-        JOIN documents d ON d.id = dv.document_id
-        JOIN folders f ON f.id = d.folder_id
-        JOIN projects p ON p.id = f.project_id
-        WHERE dv.id = $1
-      `;
+          SELECT 
+            dv.id AS version_id,
+            d.id AS document_id,
+            d.folder_id,
+            f.project_id,
+            p.company_id
+          FROM document_versions dv
+          JOIN documents d ON d.id = dv.document_id
+          JOIN folders f ON f.id = d.folder_id
+          JOIN projects p ON p.id = f.project_id
+          WHERE dv.id = $1
+        `;
 
       const { rows } = await pool.query(q, [versionId]);
       if (!rows.length)
@@ -177,12 +216,12 @@ export default async function authorizeResource(req, res, next) {
         return res.status(400).json({ error: "Invalid document id" });
 
       const q = `
-        SELECT d.id AS document_id, d.folder_id, f.project_id, p.company_id
-        FROM documents d
-        JOIN folders f ON f.id = d.folder_id
-        JOIN projects p ON p.id = f.project_id
-        WHERE d.id = $1
-      `;
+          SELECT d.id AS document_id, d.folder_id, f.project_id, p.company_id
+          FROM documents d
+          JOIN folders f ON f.id = d.folder_id
+          JOIN projects p ON p.id = f.project_id
+          WHERE d.id = $1
+        `;
       const { rows } = await pool.query(q, [documentId]);
       if (!rows.length)
         return res.status(404).json({ error: "Document not found" });
@@ -219,11 +258,11 @@ export default async function authorizeResource(req, res, next) {
         return res.status(400).json({ error: "Invalid folder id" });
 
       const q = `
-        SELECT f.id AS folder_id, f.project_id, p.company_id
-        FROM folders f
-        JOIN projects p ON p.id = f.project_id
-        WHERE f.id = $1
-      `;
+          SELECT f.id AS folder_id, f.project_id, p.company_id
+          FROM folders f
+          JOIN projects p ON p.id = f.project_id
+          WHERE f.id = $1
+        `;
       const { rows } = await pool.query(q, [folderId]);
       if (!rows.length)
         return res.status(404).json({ error: "Folder not found" });

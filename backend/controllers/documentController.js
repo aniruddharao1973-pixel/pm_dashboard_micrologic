@@ -503,65 +503,122 @@ export const toggleDownload = async (req, res) => {
 /* ============================================================================
    API 6: Customer requests restore (Recycle Bin → Admin)
 ============================================================================ */
-export const requestRestoreDocument = async (req, res) => {
-  const documentId = req.params.documentId.trim();
+// export const requestRestoreDocument = async (req, res) => {
+//   const documentId = req.params.documentId.trim();
 
-  try {
-    const meta = await pool.query(
-      `
-      SELECT 
-        d.title,
-        p.name AS project_name,
-        f.name AS folder_name,
-        p.company_id,
-        c.name AS company_name
+//   try {
+//     const meta = await pool.query(
+//       `
+//       SELECT
+//         d.title,
+//         p.name AS project_name,
+//         f.name AS folder_name,
+//         p.company_id,
+//         c.name AS company_name
+//       FROM documents d
+//       JOIN folders f ON f.id = d.folder_id
+//       JOIN projects p ON p.id = f.project_id
+//       JOIN companies c ON c.id = p.company_id
+//       WHERE d.id = $1
+//         AND d.deleted_at IS NOT NULL
+//       `,
+//       [documentId]
+//     );
+
+//     if (meta.rows.length === 0) {
+//       return res
+//         .status(404)
+//         .json({ message: "Document not found in recycle bin" });
+//     }
+
+//     const { title, project_name, folder_name, company_id, company_name } =
+//       meta.rows[0];
+
+//     // Admin + TechSales recipients
+//     const admins = await pool.query(
+//       `
+//       SELECT email
+//       FROM users
+//       WHERE role IN ('admin', 'techsales')
+//       `
+//     );
+
+//     res.json({ message: "Restore request sent to admin" });
+
+//     // 🔁 Non-blocking email
+//     setTimeout(async () => {
+//       for (const admin of admins.rows) {
+//         await sendRestoreRequestEmail({
+//           toEmail: admin.email,
+//           documentName: title,
+//           projectName: project_name,
+//           folderName: folder_name,
+//           companyName: company_name,
+//           requestedBy: req.user.email,
+//         });
+//       }
+//     }, 0);
+//   } catch (err) {
+//     console.error("Request restore error:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+export const requestRestoreItem = async (req, res) => {
+  const { id, type } = req.body; // type = document | folder
+
+  if (!["document", "folder"].includes(type)) {
+    return res.status(400).json({ message: "Invalid restore type" });
+  }
+
+  let metaQuery;
+
+  if (type === "document") {
+    metaQuery = `
+      SELECT d.title AS name, p.name AS project_name, f.name AS folder_name,
+             p.company_id, c.name AS company_name
       FROM documents d
       JOIN folders f ON f.id = d.folder_id
       JOIN projects p ON p.id = f.project_id
       JOIN companies c ON c.id = p.company_id
-      WHERE d.id = $1
-        AND d.deleted_at IS NOT NULL
-      `,
-      [documentId]
-    );
-
-    if (meta.rows.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "Document not found in recycle bin" });
-    }
-
-    const { title, project_name, folder_name, company_id, company_name } =
-      meta.rows[0];
-
-    // Admin + TechSales recipients
-    const admins = await pool.query(
-      `
-      SELECT email 
-      FROM users 
-      WHERE role IN ('admin', 'techsales')
-      `
-    );
-
-    res.json({ message: "Restore request sent to admin" });
-
-    // 🔁 Non-blocking email
-    setTimeout(async () => {
-      for (const admin of admins.rows) {
-        await sendRestoreRequestEmail({
-          toEmail: admin.email,
-          documentName: title,
-          projectName: project_name,
-          folderName: folder_name,
-          companyName: company_name,
-          requestedBy: req.user.email,
-        });
-      }
-    }, 0);
-  } catch (err) {
-    console.error("Request restore error:", err);
-    res.status(500).json({ message: "Server error" });
+      WHERE d.id = $1 AND d.deleted_at IS NOT NULL
+    `;
+  } else {
+    metaQuery = `
+      SELECT f.name AS name, p.name AS project_name,
+             p.company_id, c.name AS company_name
+      FROM folders f
+      JOIN projects p ON p.id = f.project_id
+      JOIN companies c ON c.id = p.company_id
+      WHERE f.id = $1 AND f.deleted_at IS NOT NULL
+    `;
   }
+
+  const meta = await pool.query(metaQuery, [id]);
+
+  if (meta.rowCount === 0) {
+    return res.status(404).json({ message: "Item not found in recycle bin" });
+  }
+
+  const admins = await pool.query(
+    `SELECT email FROM users WHERE role IN ('admin', 'techsales')`
+  );
+
+  res.json({ message: "Restore request sent to admin" });
+
+  setTimeout(async () => {
+    for (const admin of admins.rows) {
+      await sendRestoreRequestEmail({
+        toEmail: admin.email,
+        documentName: meta.rows[0].name,
+        projectName: meta.rows[0].project_name,
+        folderName: type === "document" ? meta.rows[0].folder_name : "—",
+        companyName: meta.rows[0].company_name,
+        requestedBy: req.user.email,
+        type,
+      });
+    }
+  }, 0);
 };
 
 /* ============================================================================
@@ -729,13 +786,25 @@ export const getRecycleBinDocuments = async (req, res) => {
 /* ============================================================================
    API 9: Get Recycle Bin Documents — CUSTOMER (company scoped)
 ============================================================================ */
+// API 9: Get Recycle Bin Documents — CUSTOMER (company scoped)
 export const getCustomerRecycleBinDocuments = async (req, res) => {
   try {
-    const companyId = req.user.company_id;
+    // 🔑 Resolve company via user_companies (correct model)
+    const companyRes = await pool.query(
+      `
+      SELECT company_id
+      FROM user_companies
+      WHERE user_id = $1
+      LIMIT 1
+      `,
+      [req.user.id]
+    );
 
-    if (!companyId) {
+    if (companyRes.rowCount === 0) {
       return res.status(403).json({ message: "Access denied" });
     }
+
+    const companyId = companyRes.rows[0].company_id;
 
     const result = await pool.query(
       `
