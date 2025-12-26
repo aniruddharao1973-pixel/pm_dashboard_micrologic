@@ -514,7 +514,6 @@ const FolderAccessControlModal = ({ open, onClose, projectId }) => {
       setFolders(normalized);
       console.log("🟡 STATE SET folders:", normalized.length);
 
-
       setIsHydrated(true);
     } catch (err) {
       console.error("Failed to load folder permissions", err);
@@ -667,19 +666,29 @@ const FolderAccessControlModal = ({ open, onClose, projectId }) => {
     setFolders((prev) =>
       prev.map((f) => {
         if (f.id !== folderId) return f;
-        // if (
-        //   f.name === "Customer Documents" &&
-        //   key !== "customer_can_see_folder"
-        // ) {
-        //   return f;
-        // }
 
-        if (f.name === "Customer Documents") {
+        // 🔒 Customer Documents is always visible
+        if (
+          f.name === "Customer Documents" &&
+          key === "customer_can_see_folder"
+        ) {
           return f;
         }
 
         const updated = { ...f, [key]: !f[key] };
 
+        // ❗ If folder is turned OFF → disable all permissions
+        if (
+          key === "customer_can_see_folder" &&
+          !updated.customer_can_see_folder
+        ) {
+          updated.customer_can_view = false;
+          updated.customer_can_upload = false;
+          updated.customer_can_download = false;
+          updated.customer_can_delete = false;
+        }
+
+        // If enabling any permission → ensure view is ON
         if (
           key !== "customer_can_see_folder" &&
           (updated.customer_can_upload ||
@@ -689,6 +698,7 @@ const FolderAccessControlModal = ({ open, onClose, projectId }) => {
           updated.customer_can_view = true;
         }
 
+        // Turning OFF view disables others
         if (key === "customer_can_view" && !updated.customer_can_view) {
           updated.customer_can_upload = false;
           updated.customer_can_download = false;
@@ -709,6 +719,7 @@ const FolderAccessControlModal = ({ open, onClose, projectId }) => {
 
       for (const f of sharedFolders) {
         await axios.put(`/folders/${f.id}/permissions`, {
+          customer_can_see_folder: f.customer_can_see_folder,
           customer_can_view: f.customer_can_view,
           customer_can_download: f.customer_can_download,
           customer_can_upload: f.customer_can_upload,
@@ -727,13 +738,14 @@ const FolderAccessControlModal = ({ open, onClose, projectId }) => {
   };
 
   const permissionConfig = [
-    // {
-    //   key: "customer_can_see_folder",
-    //   label: "Visible",
-    //   icon: Eye,
-    //   activeColor: "from-amber-500 to-orange-500",
-    //   activeShadow: "shadow-amber-500/30",
-    // },
+    {
+      key: "customer_can_see_folder",
+      label: "Available",
+      icon: Eye,
+      activeColor: "from-amber-500 to-orange-500",
+      activeShadow: "shadow-amber-500/30",
+    },
+
     {
       key: "customer_can_upload",
       label: "Upload",
@@ -947,7 +959,7 @@ const FolderAccessControlModal = ({ open, onClose, projectId }) => {
                                     {isCustomerDocuments && (
                                       <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-violet-100 text-violet-700 text-xs font-bold rounded-full">
                                         <Lock className="w-3 h-3" />
-                                        Protected
+                                        Default
                                       </span>
                                     )}
                                   </div>

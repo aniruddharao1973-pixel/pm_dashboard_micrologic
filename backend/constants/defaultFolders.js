@@ -37,6 +37,7 @@
 //   },
 // ];
 
+
 // backend/constants/defaultFolders.js
 
 export const DEFAULT_PROJECT_FOLDERS = [

@@ -67,7 +67,6 @@
 
 // export default router;
 
-
 // backend/routes/folders.js
 import express from "express";
 import { authMiddleware } from "../middleware/authMiddleware.js";

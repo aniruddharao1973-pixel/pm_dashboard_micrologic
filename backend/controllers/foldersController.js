@@ -49,28 +49,30 @@ export const getFoldersByProject = async (req, res) => {
     }
 
     // ===========================
-    // CUSTOMER → ONLY SHARED ROOT FOLDERS
+    // CUSTOMER → ONLY AVAILABLE ROOT FOLDERS
     // ===========================
     else if (role === "customer") {
       query = `
-        SELECT
-          id,
-          name,
-          parent_id,
-          project_id,
-          visibility,
-          customer_can_view,
-          customer_can_download,
-          customer_can_upload,
-          customer_can_delete,
-          created_at
-        FROM folders
-        WHERE project_id = $1
-          AND parent_id IS NULL
-          AND deleted_at IS NULL
-          AND visibility = 'shared'
-        ORDER BY name ASC
-      `;
+    SELECT
+      id,
+      name,
+      parent_id,
+      project_id,
+      visibility,
+      customer_can_see_folder,
+      customer_can_view,
+      customer_can_download,
+      customer_can_upload,
+      customer_can_delete,
+      created_at
+    FROM folders
+    WHERE project_id = $1
+      AND parent_id IS NULL
+      AND deleted_at IS NULL
+      AND visibility = 'shared'
+      AND customer_can_see_folder = true
+    ORDER BY name ASC
+  `;
     } else {
       return res.status(403).json({ message: "Access denied" });
     }
@@ -164,18 +166,24 @@ export const getCustomerVisibleFolders = async (req, res) => {
       LEFT JOIN folders p ON f.parent_id = p.id
       WHERE f.project_id = $1
         AND f.deleted_at IS NULL
+        AND f.customer_can_see_folder = true
 
-        -- ROOT folders: must be shared
         AND (
-          (f.parent_id IS NULL AND f.visibility = 'shared')
+          -- ROOT folders
+          (
+            f.parent_id IS NULL
+            AND f.visibility = 'shared'
+          )
 
-          -- SUBFOLDERS: both parent AND child must be shared
+          -- SUBFOLDERS (parent + child must be visible)
           OR (
             f.parent_id IS NOT NULL
             AND f.visibility = 'shared'
             AND p.visibility = 'shared'
+            AND p.customer_can_see_folder = true
           )
         )
+
       ORDER BY
         f.parent_id NULLS FIRST,
         f.name ASC
@@ -189,107 +197,56 @@ export const getCustomerVisibleFolders = async (req, res) => {
   }
 };
 
-// // sub-folders
-// export const getSubFolders = async (req, res) => {
-//   try {
-//     const { folderId } = req.params;
-
-//     const result = await pool.query(
-//       `
-//       WITH RECURSIVE folder_tree AS (
-//         SELECT
-//           id,
-//           name,
-//           parent_id,
-//           project_id,
-//           customer_can_view,
-//           customer_can_download,
-//           customer_can_upload,
-//           customer_can_delete,
-//           created_at
-//         FROM folders
-//         WHERE id = $1
-//         AND deleted_at IS NULL
-//         AND (
-//         $2::text IS NULL
-//         OR customer_can_see_folder = true
-// )
-
-//         UNION ALL
-
-//         SELECT
-//           f.id,
-//           f.name,
-//           f.parent_id,
-//           f.project_id,
-//           f.customer_can_view,
-//           f.customer_can_download,
-//           f.customer_can_upload,
-//           f.customer_can_delete,
-//           f.created_at
-//         FROM folders f
-//         JOIN folder_tree p ON f.parent_id = p.id
-//         WHERE f.deleted_at IS NULL
-//         AND (
-//         $2::text IS NULL
-//         OR f.customer_can_see_folder = true
-// )
-
-//       )
-//       SELECT *
-//       FROM folder_tree
-//       WHERE id != $1
-//       ORDER BY parent_id NULLS FIRST, name ASC
-//       `,
-//       [folderId, req.user.role === "customer" ? "customer" : null]
-//     );
-
-//     res.json(result.rows);
-//   } catch (error) {
-//     console.error("Get Subfolders Error:", error);
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
-
 // ✅ Get direct sub-folders
 // - Admin / TechSales: see ALL subfolders
-// - Customer: only see explicitly shared subfolders
+// - Customer: only see AVAILABLE + SHARED subfolders
 export const getSubFolders = async (req, res) => {
   try {
     const { folderId } = req.params;
     const role = req.user?.role;
 
     let query;
-    let params;
+    let params = [folderId];
 
+    // ===========================
+    // CUSTOMER
+    // ===========================
     if (role === "customer") {
       query = `
-    SELECT
-      id,
-      name,
-      parent_id,
-      project_id,
-      visibility,
-      customer_can_view,
-      customer_can_download,
-      customer_can_upload,
-      customer_can_delete,
-      created_at
-    FROM folders
-    WHERE parent_id = $1
-      AND deleted_at IS NULL
-      AND visibility = 'shared'
-    ORDER BY name ASC
-  `;
-      params = [folderId];
-    } else {
-      // admin / techsales
+        SELECT
+          f.id,
+          f.name,
+          f.parent_id,
+          f.project_id,
+          f.visibility,
+          f.customer_can_see_folder,
+          f.customer_can_view,
+          f.customer_can_download,
+          f.customer_can_upload,
+          f.customer_can_delete,
+          f.created_at
+        FROM folders f
+        JOIN folders p ON f.parent_id = p.id
+        WHERE f.parent_id = $1
+          AND f.deleted_at IS NULL
+          AND f.visibility = 'shared'
+          AND f.customer_can_see_folder = true
+          AND p.customer_can_see_folder = true
+        ORDER BY f.name ASC
+      `;
+    }
+
+    // ===========================
+    // ADMIN / TECHSALES
+    // ===========================
+    else if (role === "admin" || role === "techsales") {
       query = `
         SELECT
           id,
           name,
           parent_id,
           project_id,
+          visibility,
           customer_can_see_folder,
           customer_can_view,
           customer_can_download,
@@ -301,10 +258,13 @@ export const getSubFolders = async (req, res) => {
           AND deleted_at IS NULL
         ORDER BY name ASC
       `;
-      params = [folderId];
+    } else {
+      return res.status(403).json({ message: "Access denied" });
     }
 
     const result = await pool.query(query, params);
+
+    // 🔍 DEBUG (safe to remove later)
     if (role === "customer") {
       console.log("🔎 CUSTOMER SUBFOLDER FETCH");
       console.log("Parent folder:", folderId);
@@ -313,6 +273,7 @@ export const getSubFolders = async (req, res) => {
           id: f.id,
           name: f.name,
           visibility: f.visibility,
+          can_see: f.customer_can_see_folder,
         }))
       );
     }
@@ -369,6 +330,7 @@ export const updateFolderPermissions = async (req, res) => {
   try {
     const { folderId } = req.params;
     const {
+      customer_can_see_folder = true,
       customer_can_view = false,
       customer_can_download = false,
       customer_can_upload = false,
@@ -383,16 +345,18 @@ export const updateFolderPermissions = async (req, res) => {
       `
       UPDATE folders
       SET
-        customer_can_view = $1,
-        customer_can_download = $2,
-        customer_can_upload = $3,
-        customer_can_delete = $4
-      WHERE id = $5
+        customer_can_see_folder = $1,
+        customer_can_view = $2,
+        customer_can_download = $3,
+        customer_can_upload = $4,
+        customer_can_delete = $5
+      WHERE id = $6
         AND deleted_at IS NULL
-        AND visibility = 'shared' -- 🔒 extra safety
-      RETURNING id, name
+        AND visibility = 'shared'
+      RETURNING id, name, customer_can_see_folder
       `,
       [
+        customer_can_see_folder,
         customer_can_view,
         customer_can_download,
         customer_can_upload,
@@ -830,6 +794,7 @@ export const getAllFoldersForAccessControl = async (req, res) => {
         parent_id,
         project_id,
         visibility,
+        customer_can_see_folder,
         customer_can_view,
         customer_can_download,
         customer_can_upload,
@@ -840,6 +805,7 @@ export const getAllFoldersForAccessControl = async (req, res) => {
         AND deleted_at IS NULL
         AND visibility = 'shared'
       ORDER BY parent_id NULLS FIRST, name ASC
+
       `,
       [projectId]
     );

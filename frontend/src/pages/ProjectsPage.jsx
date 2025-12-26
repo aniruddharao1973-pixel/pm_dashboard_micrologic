@@ -258,7 +258,7 @@ const ProjectsPage = () => {
 
       {/* Scrollable content */}
       <div
-        className="relative w-full h-full overflow-y-auto overflow-x-hidden scroll-smooth"
+        className="relative -top-4 w-full h-full overflow-y-auto overflow-x-hidden scroll-smooth"
         style={{
           scrollbarWidth: "thin",
           scrollbarColor: "rgba(139, 92, 246, 0.3) transparent",

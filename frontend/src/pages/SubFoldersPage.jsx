@@ -240,6 +240,7 @@
 
 // export default SubFoldersPage;
 
+
 // src/pages/SubFoldersPage.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
@@ -548,97 +549,126 @@ const SubFoldersPage = () => {
 
         {/* Subfolders Grid */}
         {subfolders.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
             {subfolders.map((sf, index) => (
               <div
                 key={sf.id}
                 onClick={() =>
-                  navigate(`/projects/${projectId}/folders/${sf.id}`)
+                  navigate(`/projects/${projectId}/documents/${sf.id}`)
                 }
                 onMouseEnter={() => setHoveredFolder(sf.id)}
                 onMouseLeave={() => setHoveredFolder(null)}
-                className="group relative bg-white rounded-2xl border border-gray-200 
-                         p-6 cursor-pointer transition-all duration-300
-                         hover:shadow-xl hover:border-indigo-200 hover:-translate-y-1
-                         transform"
-                style={{
-                  animationDelay: `${index * 50}ms`,
-                  animation: "fadeInUp 0.5s ease-out forwards",
-                  opacity: 0,
-                }}
+                className="group relative cursor-pointer
+          bg-white/80 backdrop-blur-xl
+          rounded-xl sm:rounded-2xl
+          border border-gray-100 hover:border-indigo-200
+          shadow-sm hover:shadow-xl
+          transition-all duration-300
+          overflow-hidden
+          transform hover:-translate-y-1
+        "
               >
-                {/* Admin Actions */}
-                {isAdminLike && (
-                  <div
-                    className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 
-                                transition-opacity duration-200"
-                  >
-                    <button
-                      onClick={(e) => handleDeleteFolder(sf, e)}
-                      disabled={deletingId === sf.id}
-                      className="p-2 bg-red-50 rounded-lg text-red-500 
-                               hover:bg-red-100 transition-colors
-                               disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Move to Recycle Bin"
+                {/* Gradient Top Strip */}
+                <div
+                  className={`h-1.5 bg-gradient-to-r ${
+                    index % 5 === 0
+                      ? "from-indigo-500 to-purple-500"
+                      : index % 5 === 1
+                      ? "from-emerald-500 to-teal-500"
+                      : index % 5 === 2
+                      ? "from-amber-500 to-orange-500"
+                      : index % 5 === 3
+                      ? "from-rose-500 to-pink-500"
+                      : "from-cyan-500 to-blue-500"
+                  }`}
+                />
+
+                <div className="p-5 sm:p-6">
+                  <div className="flex items-start gap-4">
+                    {/* Icon */}
+                    <div
+                      className={`flex-shrink-0
+                w-12 h-12 sm:w-14 sm:h-14
+                rounded-xl sm:rounded-2xl
+                flex items-center justify-center
+                shadow-lg
+                transition-all duration-300
+                group-hover:scale-105
+                bg-gradient-to-br
+                ${
+                  index % 5 === 0
+                    ? "from-indigo-500 to-purple-600 shadow-indigo-500/30"
+                    : index % 5 === 1
+                    ? "from-emerald-500 to-teal-600 shadow-emerald-500/30"
+                    : index % 5 === 2
+                    ? "from-amber-500 to-orange-600 shadow-amber-500/30"
+                    : index % 5 === 3
+                    ? "from-rose-500 to-pink-600 shadow-rose-500/30"
+                    : "from-cyan-500 to-blue-600 shadow-cyan-500/30"
+                }
+              `}
                     >
-                      {deletingId === sf.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" strokeWidth={1.5} />
-                      )}
-                    </button>
+                      <Folder className="w-6 h-6 sm:w-7 sm:h-7 text-white group-hover:hidden" />
+                      <FolderOpen className="w-6 h-6 sm:w-7 sm:h-7 text-white hidden group-hover:block" />
+                    </div>
+
+                    {/* Title + Meta */}
+                    <div className="flex-1 min-w-0">
+                      <h3
+                        title={sf.name}
+                        className="text-base sm:text-lg font-bold text-gray-900
+                           group-hover:text-indigo-600 transition-colors truncate"
+                      >
+                        {sf.name}
+                      </h3>
+
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <FileText className="w-3 h-3" />
+                          {sf.document_count || 0} docs
+                        </span>
+                        {sf.created_at && (
+                          <span>
+                            {new Date(sf.created_at).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Admin Delete */}
+                    {isAdminLike && (
+                      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={(e) => handleDeleteFolder(sf, e)}
+                          disabled={deletingId === sf.id}
+                          className="p-2 bg-red-50 rounded-lg text-red-500
+                             hover:bg-red-100 transition-colors
+                             disabled:opacity-50"
+                          title="Move to Recycle Bin"
+                        >
+                          {deletingId === sf.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" strokeWidth={1.5} />
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
 
-                {/* Folder Icon with animation */}
-                <div
-                  className={`
-                  mb-4 p-3 rounded-2xl inline-block transition-all duration-300
-                  ${
-                    hoveredFolder === sf.id
-                      ? "bg-gradient-to-br from-indigo-100 to-purple-100 scale-110 rotate-3"
-                      : "bg-gradient-to-br from-gray-50 to-gray-100"
-                  }
-                `}
-                >
-                  <Folder
-                    className={`
-                      w-8 h-8 transition-colors duration-300
-                      ${
-                        hoveredFolder === sf.id
-                          ? "text-indigo-600"
-                          : "text-gray-600"
-                      }
-                    `}
-                    strokeWidth={1.5}
-                  />
-                </div>
+                  {/* Footer */}
+                  <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
+                    <span className="text-sm text-indigo-600 font-medium">
+                      Open Sub Folder
+                    </span>
 
-                {/* Folder Details */}
-                <h3
-                  className="font-semibold text-gray-900 mb-1 group-hover:text-indigo-600 
-                             transition-colors"
-                >
-                  {sf.name}
-                </h3>
-
-                {/* Optional: Add metadata if available */}
-                <div className="flex items-center gap-4 text-xs text-gray-500">
-                  <span className="flex items-center gap-1">
-                    <FileText className="w-3 h-3" />
-                    {sf.document_count || 0} docs
-                  </span>
-                  {sf.created_at && (
-                    <span>{new Date(sf.created_at).toLocaleDateString()}</span>
-                  )}
-                </div>
-
-                {/* Hover indicator */}
-                <div
-                  className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 
-                              transition-opacity duration-200"
-                >
-                  <ArrowRight className="w-4 h-4 text-indigo-500" />
+                    <ChevronRight
+                      className="w-5 h-5 text-gray-400
+                                     group-hover:text-indigo-500
+                                     group-hover:translate-x-1
+                                     transition-all"
+                    />
+                  </div>
                 </div>
               </div>
             ))}

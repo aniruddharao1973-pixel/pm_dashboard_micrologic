@@ -657,6 +657,7 @@ export default function CustomerProfile() {
       scroll-smooth
           bg-gradient-to-br from-slate-50 via-indigo-50/20 to-purple-50/30
           p-4 sm:p-6 md:p-8 lg:p-10
+          lg:-mt-10
         "
       style={{
         scrollbarWidth: "thin",

@@ -493,12 +493,14 @@ const FoldersPage = () => {
   return (
     <div
       className="
-      w-full
-      h-screen lg:h-[calc(100vh-80px)]
-      overflow-y-auto overflow-x-hidden
-      scroll-smooth
-          bg-gradient-to-br from-slate-50 via-indigo-50/20 to-purple-50/30
-          p-4 sm:p-6 md:p-8 lg:p-10
+w-full
+h-screen lg:h-[calc(100vh-80px)]
+overflow-y-auto overflow-x-hidden
+scroll-smooth
+bg-gradient-to-br from-slate-50 via-indigo-50/20 to-purple-50/30
+p-4 sm:p-6 md:p-8 lg:p-10
+lg:-mt-10
+
         "
       style={{
         scrollbarWidth: "thin",
@@ -837,9 +839,9 @@ const FoldersPage = () => {
                         </h3>
 
                         <div className="flex items-center gap-1.5 mt-1.5 text-gray-500">
-                          <Shield className="w-3.5 h-3.5" />
+                          <Eye className="w-3.5 h-3.5" />
                           <span className="text-xs sm:text-sm">
-                            Access granted
+                            Open Sub Folder
                           </span>
                         </div>
                       </div>

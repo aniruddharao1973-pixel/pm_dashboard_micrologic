@@ -473,6 +473,7 @@ function CustomerListForProjects() {
       scroll-smooth
           bg-gradient-to-br from-slate-50 via-indigo-50/20 to-purple-50/30
           p-4 sm:p-6 md:p-8 lg:p-10
+          
         "
       style={{
         scrollbarWidth: "thin",
@@ -487,7 +488,7 @@ function CustomerListForProjects() {
           <div className="absolute -bottom-40 right-1/3 w-80 h-80 bg-gradient-to-br from-indigo-400/10 to-purple-400/10 rounded-full blur-3xl" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-10">
+        <div className="relative -top-10 sm:-top-12 lg:-top-16 z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-4 lg:py-6">
           {/* Header Section */}
           <div className="mb-8 sm:mb-10 lg:mb-12">
             {/* Breadcrumb */}
