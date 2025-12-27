@@ -31,10 +31,30 @@ import CustomerRecycleBin from "./pages/customer/RecycleBin";
 import ResetPassword from "./pages/ResetPassword";
 import SubFoldersPage from "./pages/SubFoldersPage";
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+// const ProtectedRoute = ({ children }) => {
+//   const { isAuthenticated, loading } = useAuth();
 
-  // ⏳ Wait for AuthContext to load from localStorage
+//   // ⏳ Wait for AuthContext to load from localStorage
+//   if (loading) {
+//     return (
+//       <div className="h-screen flex items-center justify-center text-gray-500">
+//         Loading...
+//       </div>
+//     );
+//   }
+
+//   // After loading completes → decide correctly
+//   if (!isAuthenticated) {
+//     return <Navigate to="/login" replace />;
+//   }
+
+//   return children;
+// };
+
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading, user } = useAuth();
+  const location = window.location.pathname;
+
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center text-gray-500">
@@ -43,9 +63,13 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  // After loading completes → decide correctly
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  // 🔒 FRONTEND GUARD: Customer → Admin URL swap
+  if (user?.role === "customer" && location.startsWith("/admin")) {
+    return <Navigate to="/forbidden" replace />;
   }
 
   return children;

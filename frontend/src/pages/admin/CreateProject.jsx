@@ -21,7 +21,7 @@
 //       await createProject({ name, customerId });
 //       toast.success("Project created successfully!");
 //       navigate(`/admin/customers/${customerId}`);
-      
+
 //     } catch (err) {
 //       console.error("Create Project Error:", err);
 //       toast.error(err.response?.data?.message || "Failed to create project");
@@ -31,13 +31,13 @@
 //   return (
 // <div className="min-h-screen flex items-start justify-center px-6 pt-20 bg-gray-50">
 
-//   <div className="w-full max-w-xl 
-//                   bg-white/90 shadow-xl rounded-2xl 
+//   <div className="w-full max-w-xl
+//                   bg-white/90 shadow-xl rounded-2xl
 //                   p-8 border border-gray-300">
 
-//     <h1 className="text-3xl font-extrabold 
-//                    bg-gradient-to-r from-purple-600 to-blue-600 
-//                    bg-clip-text text-transparent 
+//     <h1 className="text-3xl font-extrabold
+//                    bg-gradient-to-r from-purple-600 to-blue-600
+//                    bg-clip-text text-transparent
 //                    text-center mb-8">
 //       Create Project
 //     </h1>
@@ -50,7 +50,7 @@
 //     {/* Input */}
 //     <input
 //       type="text"
-//       className="w-full px-4 py-3 rounded-xl 
+//       className="w-full px-4 py-3 rounded-xl
 //                  bg-gray-100 border-2 border-gray-300
 //                  focus:border-purple-500 focus:ring-4 focus:ring-purple-100
 //                  outline-none transition-all"
@@ -70,7 +70,6 @@
 //   Create Project →
 // </button>
 
-
 //   </div>
 
 // </div>
@@ -78,17 +77,18 @@
 //   );
 // }
 
-
 // src/pages/admin/CreateProject.jsx
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAdminApi } from "../../api/adminApi";
 import { toast } from "react-toastify";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function CreateProject() {
-  const { customerId } = useParams();  // <-- IMPORTANT
+  const { customerId } = useParams(); // <-- IMPORTANT
   const navigate = useNavigate();
   const { createProject } = useAdminApi();
+  const { user } = useAuth();
 
   const [name, setName] = useState("");
 
@@ -101,8 +101,13 @@ export default function CreateProject() {
     try {
       await createProject({ name, customerId });
       toast.success("Project created successfully!");
-      navigate(`/admin/customers/${customerId}`);
-      
+      // navigate(`/admin/customers/${customerId}`);
+
+      if (user.role === "admin" || user.role === "techsales") {
+        navigate(`/admin/customers/${customerId}`);
+      } else {
+        navigate("/projects");
+      }
     } catch (err) {
       console.error("Create Project Error:", err);
       toast.error(err.response?.data?.message || "Failed to create project");
@@ -111,15 +116,17 @@ export default function CreateProject() {
 
   return (
     <div className="min-h-screen flex items-start justify-center px-4 sm:px-6 pt-10 sm:pt-16 md:pt-20 bg-gray-50">
-
-      <div className="w-full max-w-xl 
+      <div
+        className="w-full max-w-xl 
                       bg-white/90 shadow-xl rounded-2xl 
-                      p-6 sm:p-8 border border-gray-300">
-
-        <h1 className="text-2xl sm:text-3xl font-extrabold 
+                      p-6 sm:p-8 border border-gray-300"
+      >
+        <h1
+          className="text-2xl sm:text-3xl font-extrabold 
                        bg-gradient-to-r from-purple-600 to-blue-600 
                        bg-clip-text text-transparent 
-                       text-center mb-6 sm:mb-8">
+                       text-center mb-6 sm:mb-8"
+        >
           Create Project
         </h1>
 
@@ -152,9 +159,7 @@ export default function CreateProject() {
         >
           Create Project →
         </button>
-
       </div>
-
     </div>
   );
 }

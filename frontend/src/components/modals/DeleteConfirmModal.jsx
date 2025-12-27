@@ -66,9 +66,6 @@
 
 // export default DeleteConfirmModal;
 
-
-
-
 // // src/components/modals/DeleteConfirmModal.jsx
 // import React from "react";
 // import { useDocumentsApi } from "../../api/documentsApi";
@@ -129,7 +126,7 @@
 //           {/* Cancel */}
 //           <button
 //             onClick={onClose}
-//             className="px-6 py-2 rounded-xl font-bold text-gray-700 bg-gray-100 border border-gray-300 
+//             className="px-6 py-2 rounded-xl font-bold text-gray-700 bg-gray-100 border border-gray-300
 //                        hover:bg-gray-200 hover:shadow-lg transition-all duration-300"
 //           >
 //             Cancel
@@ -162,9 +159,6 @@
 
 // export default DeleteConfirmModal;
 
-
-
-
 // src/components/modals/DeleteConfirmModal.jsx
 import React from "react";
 import { useDocumentsApi } from "../../api/documentsApi";
@@ -194,38 +188,42 @@ const DeleteConfirmModal = ({ document, onClose, onDelete }) => {
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center animate-fadeIn">
-
-      <div className="
+      <div
+        className="
         w-[90%] max-w-md 
         bg-white/90 backdrop-blur-xl 
         rounded-2xl shadow-2xl border border-red-100 
         p-8 transform animate-scaleIn
-      ">
-
+      "
+      >
         {/* Warning Icon */}
         <div className="flex justify-center mb-4">
-          <div className="
+          <div
+            className="
             w-16 h-16 rounded-full 
             bg-red-100 flex items-center justify-center
             shadow-lg
-          ">
+          "
+          >
             <span className="text-red-600 text-4xl">⚠️</span>
           </div>
         </div>
 
         {/* Title */}
-        <h2 className="
+        <h2
+          className="
           text-2xl font-extrabold text-center 
           bg-gradient-to-r from-red-600 to-orange-600 
           bg-clip-text text-transparent
           tracking-wide
-        ">
+        "
+        >
           Delete Document
         </h2>
 
         {/* Subtitle */}
         <p className="text-center text-gray-700 mt-3 text-sm">
-          Are you sure you want to permanently delete:
+          Are you sure you want to move this item to the Recycle Bin?
         </p>
 
         {/* File Name */}
@@ -233,13 +231,9 @@ const DeleteConfirmModal = ({ document, onClose, onDelete }) => {
           {document.title}
         </p>
 
-        <p className="text-center text-gray-500 text-xs mt-2">
-          This action cannot be undone.
-        </p>
 
         {/* Buttons */}
         <div className="flex justify-center gap-4 mt-8">
-
           {/* Cancel */}
           <button
             onClick={onClose}
@@ -267,9 +261,7 @@ const DeleteConfirmModal = ({ document, onClose, onDelete }) => {
           >
             Delete
           </button>
-
         </div>
-
       </div>
 
       {/* Animations */}
@@ -289,7 +281,6 @@ const DeleteConfirmModal = ({ document, onClose, onDelete }) => {
           to   { transform: scale(1); opacity: 1; }
         }
       `}</style>
-
     </div>
   );
 };

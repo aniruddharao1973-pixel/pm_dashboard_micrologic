@@ -47,7 +47,8 @@ export const uploadDocument = async (req, res) => {
       permRes.rows[0].customer_can_upload !== true
     ) {
       return res.status(403).json({
-        message: "Upload not allowed in this folder",
+        code: "UPLOAD_PERMISSION_REVOKED",
+        message: "Upload permission revoked",
       });
     }
   }

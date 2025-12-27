@@ -197,6 +197,94 @@ export const getCustomerVisibleFolders = async (req, res) => {
   }
 };
 
+// // ✅ Get direct sub-folders
+// // - Admin / TechSales: see ALL subfolders
+// // - Customer: only see AVAILABLE + SHARED subfolders
+// export const getSubFolders = async (req, res) => {
+//   try {
+//     const { folderId } = req.params;
+//     const role = req.user?.role;
+
+//     let query;
+//     let params = [folderId];
+
+//     // ===========================
+//     // CUSTOMER
+//     // ===========================
+//     if (role === "customer") {
+//       query = `
+//         SELECT
+//           f.id,
+//           f.name,
+//           f.parent_id,
+//           f.project_id,
+//           f.visibility,
+//           f.customer_can_see_folder,
+//           f.customer_can_view,
+//           f.customer_can_download,
+//           f.customer_can_upload,
+//           f.customer_can_delete,
+//           f.created_at
+//         FROM folders f
+//         JOIN folders p ON f.parent_id = p.id
+//         WHERE f.parent_id = $1
+//           AND f.deleted_at IS NULL
+//           AND f.visibility = 'shared'
+//           AND f.customer_can_see_folder = true
+//           AND p.customer_can_see_folder = true
+//         ORDER BY f.name ASC
+//       `;
+//     }
+
+//     // ===========================
+//     // ADMIN / TECHSALES
+//     // ===========================
+//     else if (role === "admin" || role === "techsales") {
+//       query = `
+//         SELECT
+//           id,
+//           name,
+//           parent_id,
+//           project_id,
+//           visibility,
+//           customer_can_see_folder,
+//           customer_can_view,
+//           customer_can_download,
+//           customer_can_upload,
+//           customer_can_delete,
+//           created_at
+//         FROM folders
+//         WHERE parent_id = $1
+//           AND deleted_at IS NULL
+//         ORDER BY name ASC
+//       `;
+//     } else {
+//       return res.status(403).json({ message: "Access denied" });
+//     }
+
+//     const result = await pool.query(query, params);
+
+//     // 🔍 DEBUG (safe to remove later)
+//     if (role === "customer") {
+//       console.log("🔎 CUSTOMER SUBFOLDER FETCH");
+//       console.log("Parent folder:", folderId);
+//       console.table(
+//         result.rows.map((f) => ({
+//           id: f.id,
+//           name: f.name,
+//           visibility: f.visibility,
+//           can_see: f.customer_can_see_folder,
+//         }))
+//       );
+//     }
+
+//     res.json(result.rows);
+//   } catch (error) {
+//     console.error("Get Subfolders Error:", error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
 // ✅ Get direct sub-folders
 // - Admin / TechSales: see ALL subfolders
 // - Customer: only see AVAILABLE + SHARED subfolders
@@ -206,7 +294,7 @@ export const getSubFolders = async (req, res) => {
     const role = req.user?.role;
 
     let query;
-    let params = [folderId];
+    const params = [folderId];
 
     // ===========================
     // CUSTOMER
@@ -224,14 +312,19 @@ export const getSubFolders = async (req, res) => {
           f.customer_can_download,
           f.customer_can_upload,
           f.customer_can_delete,
-          f.created_at
+          f.created_at,
+          COUNT(d.id) AS document_count
         FROM folders f
         JOIN folders p ON f.parent_id = p.id
+        LEFT JOIN documents d
+          ON d.folder_id = f.id
+          AND d.deleted_at IS NULL
         WHERE f.parent_id = $1
           AND f.deleted_at IS NULL
           AND f.visibility = 'shared'
           AND f.customer_can_see_folder = true
           AND p.customer_can_see_folder = true
+        GROUP BY f.id, p.id
         ORDER BY f.name ASC
       `;
     }
@@ -242,21 +335,26 @@ export const getSubFolders = async (req, res) => {
     else if (role === "admin" || role === "techsales") {
       query = `
         SELECT
-          id,
-          name,
-          parent_id,
-          project_id,
-          visibility,
-          customer_can_see_folder,
-          customer_can_view,
-          customer_can_download,
-          customer_can_upload,
-          customer_can_delete,
-          created_at
-        FROM folders
-        WHERE parent_id = $1
-          AND deleted_at IS NULL
-        ORDER BY name ASC
+          f.id,
+          f.name,
+          f.parent_id,
+          f.project_id,
+          f.visibility,
+          f.customer_can_see_folder,
+          f.customer_can_view,
+          f.customer_can_download,
+          f.customer_can_upload,
+          f.customer_can_delete,
+          f.created_at,
+          COUNT(d.id) AS document_count
+        FROM folders f
+        LEFT JOIN documents d
+          ON d.folder_id = f.id
+          AND d.deleted_at IS NULL
+        WHERE f.parent_id = $1
+          AND f.deleted_at IS NULL
+        GROUP BY f.id
+        ORDER BY f.name ASC
       `;
     } else {
       return res.status(403).json({ message: "Access denied" });
@@ -272,6 +370,7 @@ export const getSubFolders = async (req, res) => {
         result.rows.map((f) => ({
           id: f.id,
           name: f.name,
+          docs: f.document_count,
           visibility: f.visibility,
           can_see: f.customer_can_see_folder,
         }))
@@ -325,7 +424,62 @@ export const getFolderInfo = async (req, res) => {
   }
 };
 
-// ⭐ Update customer permissions for a SINGLE folder only
+// // ⭐ Update customer permissions for a SINGLE folder only
+// export const updateFolderPermissions = async (req, res) => {
+//   try {
+//     const { folderId } = req.params;
+//     const {
+//       customer_can_see_folder = true,
+//       customer_can_view = false,
+//       customer_can_download = false,
+//       customer_can_upload = false,
+//       customer_can_delete = false,
+//     } = req.body;
+
+//     if (!["admin", "techsales"].includes(req.user.role)) {
+//       return res.status(403).json({ message: "Access denied" });
+//     }
+
+//     const result = await pool.query(
+//       `
+//       UPDATE folders
+//       SET
+//         customer_can_see_folder = $1,
+//         customer_can_view = $2,
+//         customer_can_download = $3,
+//         customer_can_upload = $4,
+//         customer_can_delete = $5
+//       WHERE id = $6
+//         AND deleted_at IS NULL
+//         AND visibility = 'shared'
+//       RETURNING id, name, customer_can_see_folder
+//       `,
+//       [
+//         customer_can_see_folder,
+//         customer_can_view,
+//         customer_can_download,
+//         customer_can_upload,
+//         customer_can_delete,
+//         folderId,
+//       ]
+//     );
+
+//     if (result.rowCount === 0) {
+//       return res.status(404).json({
+//         message: "Folder not found or not eligible for permissions",
+//       });
+//     }
+
+//     res.json({
+//       message: "Folder permissions updated",
+//       folder: result.rows[0],
+//     });
+//   } catch (error) {
+//     console.error("Update Folder Permissions Error:", error);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
 export const updateFolderPermissions = async (req, res) => {
   try {
     const { folderId } = req.params;
@@ -352,8 +506,7 @@ export const updateFolderPermissions = async (req, res) => {
         customer_can_delete = $5
       WHERE id = $6
         AND deleted_at IS NULL
-        AND visibility = 'shared'
-      RETURNING id, name, customer_can_see_folder
+      RETURNING id, name, is_default
       `,
       [
         customer_can_see_folder,
@@ -367,7 +520,7 @@ export const updateFolderPermissions = async (req, res) => {
 
     if (result.rowCount === 0) {
       return res.status(404).json({
-        message: "Folder not found or not eligible for permissions",
+        message: "Folder not found",
       });
     }
 

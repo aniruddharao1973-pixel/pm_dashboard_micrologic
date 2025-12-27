@@ -35,11 +35,22 @@ export default async function authorizeResource(req, res, next) {
     const user = req.user;
     if (!user) return res.status(401).json({ error: "Unauthenticated" });
 
-    // Global admin bypass
-    // Global admin + tech_sales bypass
+    // 🔒 Prevent CUSTOMER → ADMIN URL swapping
+    if (user.role === "customer" && req.originalUrl.startsWith("/admin")) {
+      console.log("❌ CUSTOMER attempted ADMIN route access:", req.originalUrl);
+      return accessDenied(res);
+    }
+
+    // 2️⃣ GLOBAL ADMIN / TECHSALES BYPASS (THIS WAS MISSING)
     if (user.role === "admin" || user.role === "techsales") {
       return next();
     }
+
+    // Global admin bypass
+    // Global admin + tech_sales bypass
+    // if (user.role === "admin" || user.role === "techsales") {
+    //   return next();
+    // }
 
     // ⭐ HANDLE PERMISSIONS ROUTE (folderId → projectId resolution)
     if (req.params.folderId && !req.params.projectId) {

@@ -1,246 +1,3 @@
-// // src/pages/SubFoldersPage.jsx
-// import React, { useEffect, useState } from "react";
-// import { useParams, useNavigate } from "react-router-dom";
-// import { useFoldersApi } from "../api/foldersApi";
-// import { Folder, FolderOpen, ChevronRight } from "lucide-react";
-
-// const SubFoldersPage = () => {
-//   const { projectId, folderId } = useParams();
-//   const navigate = useNavigate();
-//   const { getSubFolders } = useFoldersApi();
-
-//   const [subfolders, setSubfolders] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   useEffect(() => {
-//     (async () => {
-//       try {
-//         const res = await getSubFolders(folderId);
-//         setSubfolders(res.data || []);
-//       } finally {
-//         setLoading(false);
-//       }
-//     })();
-//   }, [folderId]);
-
-//   if (loading) return <div className="p-6">Loading...</div>;
-
-//   return (
-//     <div className="p-6 space-y-6">
-//       {/* Subfolders */}
-//       {subfolders.length > 0 && (
-//         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-//           {subfolders.map((sf) => (
-//             <div
-//               key={sf.id}
-//               onClick={() =>
-//                 navigate(`/projects/${projectId}/folders/${sf.id}`)
-//               }
-//               className="cursor-pointer bg-white rounded-xl border p-4 hover:shadow"
-//             >
-//               <Folder className="w-6 h-6 mb-2" />
-//               <p className="font-semibold">{sf.name}</p>
-//             </div>
-//           ))}
-//         </div>
-//       )}
-
-//       {/* Documents CTA */}
-//       <button
-//         onClick={() => navigate(`/projects/${projectId}/documents/${folderId}`)}
-//         className="flex items-center gap-2 text-indigo-600 font-semibold"
-//       >
-//         <FolderOpen className="w-5 h-5" />
-//         View Documents
-//         <ChevronRight className="w-4 h-4" />
-//       </button>
-//     </div>
-//   );
-// };
-
-// export default SubFoldersPage;
-
-/* ---------------------------------------------------------------------------------------------------------------------------------------------*/
-
-// // src/pages/SubFoldersPage.jsx
-// import React, { useEffect, useState } from "react";
-// import { useParams, useNavigate, Link } from "react-router-dom";
-// import { useFoldersApi } from "../api/foldersApi";
-// import { useAuth } from "../hooks/useAuth";
-// import CreateFolderModal from "../components/modals/CreateFolderModal";
-// import { Folder, FolderOpen, ChevronRight, Plus } from "lucide-react";
-
-// const SubFoldersPage = () => {
-//   const { projectId, folderId } = useParams();
-//   const navigate = useNavigate();
-//   const { user } = useAuth();
-//   const { getSubFolders, getFolderById, createSubFolder, deleteFolder } =
-//     useFoldersApi();
-
-//   const [subfolders, setSubfolders] = useState([]);
-//   const [folderChain, setFolderChain] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [showCreate, setShowCreate] = useState(false);
-
-//   const isAdminLike = user.role === "admin" || user.role === "techsales";
-
-//   const loadHierarchy = async () => {
-//     let currentId = folderId;
-//     const chain = [];
-
-//     while (currentId) {
-//       const res = await getFolderById(currentId);
-//       if (!res.data) break;
-//       chain.unshift(res.data);
-//       currentId = res.data.parent_id;
-//     }
-
-//     setFolderChain(chain);
-//   };
-
-//   const loadSubFolders = async () => {
-//     const res = await getSubFolders(folderId);
-//     setSubfolders(res.data || []);
-//   };
-
-//   useEffect(() => {
-//     (async () => {
-//       await Promise.all([loadHierarchy(), loadSubFolders()]);
-//       setLoading(false);
-//     })();
-//   }, [folderId]);
-
-//   const handleCreate = async (data) => {
-//     await createSubFolder(folderId, {
-//       project_id: projectId,
-//       ...data,
-//     });
-
-//     // reload subfolders if you already have a loader
-//     const res = await getSubFolders(folderId);
-//     setSubfolders(res.data || []);
-//   };
-
-//   const handleDeleteFolder = async (folderId) => {
-//     if (!window.confirm("Move this sub-folder to Recycle Bin?")) return;
-
-//     try {
-//       await deleteFolder(folderId);
-//       const res = await getSubFolders(folderId);
-//       setSubfolders(res.data || []);
-//     } catch (err) {
-//       console.error("Delete sub-folder failed", err);
-//     }
-//   };
-
-//   if (loading) return <div className="p-6">Loading...</div>;
-
-//   return (
-//     <div className="p-6 space-y-6">
-//       {/* Breadcrumb */}
-//       <div className="flex items-center gap-2 text-sm">
-//         <Link to={`/projects/${projectId}/folders`} className="text-indigo-600">
-//           Folders
-//         </Link>
-//         {folderChain.map((f, i) => (
-//           <React.Fragment key={f.id}>
-//             <ChevronRight className="w-4 h-4 text-gray-400" />
-//             {i === folderChain.length - 1 ? (
-//               <span className="font-semibold">{f.name}</span>
-//             ) : (
-//               <Link
-//                 to={`/projects/${projectId}/folders/${f.id}`}
-//                 className="text-indigo-600"
-//               >
-//                 {f.name}
-//               </Link>
-//             )}
-//           </React.Fragment>
-//         ))}
-//       </div>
-
-//       {/* Header */}
-//       <div className="flex items-center justify-between">
-//         <h2 className="text-xl font-bold">
-//           {folderChain.length === 1 ? "Sub Folders" : "Documents"}
-//         </h2>
-
-//         {isAdminLike && folderChain.length === 1 && (
-//           <button
-//             onClick={() => setShowCreate(true)}
-//             className="flex items-center gap-2 px-3 py-2 bg-indigo-600 text-white rounded-lg"
-//           >
-//             <Plus className="w-4 h-4" />
-//             New Sub Folder
-//           </button>
-//         )}
-//       </div>
-
-//       {/* Subfolders Grid */}
-//       {/* Subfolders Grid */}
-//       {subfolders.length > 0 && (
-//         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-//           {subfolders.map((sf) => (
-//             <div
-//               key={sf.id}
-//               onClick={() =>
-//                 navigate(`/projects/${projectId}/folders/${sf.id}`)
-//               }
-//               className="cursor-pointer bg-white rounded-xl border p-4 hover:shadow relative"
-//             >
-//               {/* DELETE ACTION — ADMIN / TECHSALES ONLY */}
-//               {isAdminLike && (
-//                 <button
-//                   onClick={async (e) => {
-//                     e.stopPropagation();
-
-//                     if (!window.confirm(`Move "${sf.name}" to Recycle Bin?`))
-//                       return;
-
-//                     try {
-//                       await deleteFolder(sf.id);
-//                       const res = await getSubFolders(folderId);
-//                       setSubfolders(res.data || []);
-//                     } catch (err) {
-//                       console.error("Delete sub-folder failed", err);
-//                     }
-//                   }}
-//                   className="absolute top-2 right-2 text-xs text-red-500 hover:text-red-600"
-//                 >
-//                   Delete
-//                 </button>
-//               )}
-
-//               <Folder className="w-6 h-6 mb-2" />
-//               <p className="font-semibold">{sf.name}</p>
-//             </div>
-//           ))}
-//         </div>
-//       )}
-
-//       {/* View Documents CTA */}
-//       <button
-//         onClick={() => navigate(`/projects/${projectId}/documents/${folderId}`)}
-//         className="flex items-center gap-2 text-indigo-600 font-semibold"
-//       >
-//         <FolderOpen className="w-5 h-5" />
-//         View Documents
-//         <ChevronRight className="w-4 h-4" />
-//       </button>
-
-//       <CreateFolderModal
-//         open={showCreate}
-//         onClose={() => setShowCreate(false)}
-//         isSubfolder
-//         onCreate={handleCreate}
-//       />
-//     </div>
-//   );
-// };
-
-// export default SubFoldersPage;
-
-
 // src/pages/SubFoldersPage.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
@@ -249,6 +6,8 @@ import { useAuth } from "../hooks/useAuth";
 import CreateFolderModal from "../components/modals/CreateFolderModal";
 import ConfirmDeleteModal from "../components/modals/ConfirmFolderDeleteModal";
 import { toast } from "react-toastify";
+import { useProjectsApi } from "../api/projectsApi";
+import { useAdminApi } from "../api/adminApi";
 
 import {
   Folder,
@@ -284,8 +43,43 @@ const SubFoldersPage = () => {
   const [deletingId, setDeletingId] = useState(null);
   const [hoveredFolder, setHoveredFolder] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [customerName, setCustomerName] = useState("");
+  const [projectName, setProjectName] = useState("");
+  const [companyId, setCompanyId] = useState(null);
+
+  const { getProjectById } = useProjectsApi();
+  const { getCustomer } = useAdminApi();
 
   const isAdminLike = user.role === "admin" || user.role === "techsales";
+
+  // ==============================
+  // Load Project + Customer (for breadcrumb)
+  // Same logic as FoldersPage
+  // ==============================
+  const loadProjectAndCustomer = async () => {
+    try {
+      const pRes = await getProjectById(projectId);
+      const project = pRes.data;
+
+      setProjectName(project.name);
+      setCompanyId(project.company_id);
+
+      if (user.role === "admin" || user.role === "techsales") {
+        if (project.company_id) {
+          const cRes = await getCustomer(project.company_id);
+          if (cRes.data?.company) {
+            setCustomerName(cRes.data.company.name);
+          }
+        }
+      } else {
+        if (project.company_name) {
+          setCustomerName(project.company_name);
+        }
+      }
+    } catch (err) {
+      console.error("Error loading project/customer:", err);
+    }
+  };
 
   const loadHierarchy = async () => {
     let currentId = folderId;
@@ -322,10 +116,14 @@ const SubFoldersPage = () => {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      await Promise.all([loadHierarchy(), loadSubFolders()]);
+      await Promise.all([
+        loadHierarchy(),
+        loadSubFolders(),
+        loadProjectAndCustomer(), // ← THIS WAS MISSING
+      ]);
       setLoading(false);
     })();
-  }, [folderId]);
+  }, [projectId, folderId]);
 
   const handleCreate = async (data) => {
     try {
@@ -438,56 +236,158 @@ const SubFoldersPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
       <div className="p-6 max-w-7xl mx-auto space-y-6">
-        {/* Enhanced Breadcrumb */}
-        <nav className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-3.5">
-          <div className="flex items-center gap-2 text-sm flex-wrap">
-            <Link
-              to={`/projects/${projectId}`}
-              className="flex items-center gap-1.5 text-gray-600 hover:text-indigo-600 
-                       transition-colors group"
-            >
-              <Home className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span>Project</span>
-            </Link>
+        {/* ==================== BREADCRUMB NAVIGATION ==================== */}
+        <div
+          className="
+    flex flex-wrap items-center gap-1 sm:gap-1.5 text-sm sm:text-base font-semibold
+    px-3 sm:px-4 py-2 sm:py-2.5
+    bg-gradient-to-r from-white via-indigo-50/20 to-white
+    backdrop-blur-sm
+    border border-gray-200/60
+    rounded-xl sm:rounded-2xl
+    shadow-sm
+    hover:shadow-md hover:border-indigo-200/70
+    transition-all duration-300
+    relative overflow-hidden
+    before:absolute before:inset-0 before:bg-gradient-to-r
+    before:from-transparent before:via-indigo-100/10 before:to-transparent
+    before:translate-x-[-100%] hover:before:translate-x-[100%]
+    before:transition-transform before:duration-1000
+  "
+        >
+          {/* Dashboard */}
+          <span
+            onClick={() => navigate("/dashboard")}
+            className="
+      text-gray-700 font-semibold hover:text-indigo-600
+      transition-all duration-300 relative
+      px-2 sm:px-2.5 py-0.5 sm:py-1
+      rounded-md sm:rounded-lg cursor-pointer
+      hover:bg-white/80 hover:shadow-sm
+      after:content-[''] after:absolute after:bottom-0.5
+      after:left-2 sm:after:left-2.5 after:right-2 sm:after:right-2.5
+      after:h-0.5
+      after:bg-gradient-to-r after:from-indigo-400 after:via-indigo-600 after:to-indigo-400
+      after:scale-x-0 after:transition-transform after:duration-300 after:rounded-full
+      hover:after:scale-x-100
+    "
+          >
+            Dashboard
+          </span>
 
-            <ChevronRight className="w-4 h-4 text-gray-300" />
+          <span className="text-gray-400">›</span>
 
-            <Link
-              to={`/projects/${projectId}/folders`}
-              className="flex items-center gap-1.5 text-gray-600 hover:text-indigo-600 
-                       transition-colors group"
-            >
-              <FolderTree className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              <span>Folders</span>
-            </Link>
+          {/* Projects */}
+          <span
+            onClick={() => navigate("/projects")}
+            className="
+      text-gray-700 font-semibold hover:text-indigo-600
+      transition-all duration-300 relative
+      px-2 sm:px-2.5 py-0.5 sm:py-1
+      rounded-md sm:rounded-lg cursor-pointer
+      hover:bg-white/80 hover:shadow-sm
+      after:content-[''] after:absolute after:bottom-0.5
+      after:left-2 sm:after:left-2.5 after:right-2 sm:after:right-2.5
+      after:h-0.5
+      after:bg-gradient-to-r after:from-indigo-400 after:via-indigo-600 after:to-indigo-400
+      after:scale-x-0 after:transition-transform after:duration-300 after:rounded-full
+      hover:after:scale-x-100
+    "
+          >
+            Projects
+          </span>
 
-            {folderChain.map((f, i) => (
-              <React.Fragment key={f.id}>
-                <ChevronRight className="w-4 h-4 text-gray-300" />
-                {i === folderChain.length - 1 ? (
-                  <div
-                    className="flex items-center gap-1.5 px-3 py-1 
-                                bg-indigo-50 rounded-lg border border-indigo-100"
-                  >
-                    <Folder className="w-4 h-4 text-indigo-600" />
-                    <span className="font-semibold text-indigo-900">
-                      {f.name}
-                    </span>
-                  </div>
-                ) : (
-                  <Link
-                    to={`/projects/${projectId}/folders/${f.id}`}
-                    className="flex items-center gap-1.5 text-gray-600 hover:text-indigo-600 
-                             transition-colors group"
-                  >
-                    <Folder className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    <span>{f.name}</span>
-                  </Link>
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-        </nav>
+          {/* Customer (admin / techsales only) */}
+          {(user.role === "admin" || user.role === "techsales") &&
+            customerName &&
+            companyId && (
+              <>
+                <span className="text-gray-400">›</span>
+                <span
+                  onClick={() => navigate(`/admin/company/${companyId}`)}
+                  className="
+            text-gray-700 font-semibold hover:text-indigo-600
+            transition-all duration-300 relative
+            px-2 sm:px-2.5 py-0.5 sm:py-1
+            rounded-md sm:rounded-lg cursor-pointer
+            hover:bg-white/80 hover:shadow-sm
+            after:content-[''] after:absolute after:bottom-0.5
+            after:left-2 sm:after:left-2.5 after:right-2 sm:after:right-2.5
+            after:h-0.5
+            after:bg-gradient-to-r after:from-indigo-400 after:via-indigo-600 after:to-indigo-400
+            after:scale-x-0 after:transition-transform after:duration-300 after:rounded-full
+            hover:after:scale-x-100
+          "
+                >
+                  {customerName}
+                </span>
+              </>
+            )}
+
+          <span className="text-gray-400">›</span>
+
+          {/* ProjectName - Folders (ACTIVE) */}
+          <span
+            onClick={() => navigate(`/projects/${projectId}/folders`)}
+            className="
+    text-gray-700 font-semibold hover:text-indigo-600
+    transition-all duration-300 relative
+    px-2 sm:px-2.5 py-0.5 sm:py-1
+    rounded-md sm:rounded-lg cursor-pointer
+    hover:bg-white/80 hover:shadow-sm
+    after:content-[''] after:absolute after:bottom-0.5
+    after:left-2 sm:after:left-2.5 after:right-2 sm:after:right-2.5
+    after:h-0.5
+    after:bg-gradient-to-r after:from-indigo-400 after:via-indigo-600 after:to-indigo-400
+    after:scale-x-0 after:transition-transform after:duration-300 after:rounded-full
+    hover:after:scale-x-100
+  "
+          >
+            {projectName} - Folders
+          </span>
+
+          {/* Folder chain */}
+          {folderChain.map((f, i) => (
+            <React.Fragment key={f.id}>
+              <span className="text-gray-400">›</span>
+
+              {i === folderChain.length - 1 ? (
+                <span
+                  className="
+            text-indigo-600 font-bold
+            px-2 sm:px-2.5 py-0.5 sm:py-1
+            rounded-md sm:rounded-lg
+            bg-gradient-to-br from-indigo-50 via-white to-indigo-50
+            border border-indigo-100/50
+          "
+                >
+                  {f.name}
+                </span>
+              ) : (
+                <span
+                  onClick={() =>
+                    navigate(`/projects/${projectId}/folders/${f.id}`)
+                  }
+                  className="
+            text-gray-700 font-semibold hover:text-indigo-600
+            transition-all duration-300 relative
+            px-2 sm:px-2.5 py-0.5 sm:py-1
+            rounded-md sm:rounded-lg cursor-pointer
+            hover:bg-white/80 hover:shadow-sm
+            after:content-[''] after:absolute after:bottom-0.5
+            after:left-2 sm:after:left-2.5 after:right-2 sm:after:right-2.5
+            after:h-0.5
+            after:bg-gradient-to-r after:from-indigo-400 after:via-indigo-600 after:to-indigo-400
+            after:scale-x-0 after:transition-transform after:duration-300 after:rounded-full
+            hover:after:scale-x-100
+          "
+                >
+                  {f.name}
+                </span>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
 
         {/* Enhanced Header */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">

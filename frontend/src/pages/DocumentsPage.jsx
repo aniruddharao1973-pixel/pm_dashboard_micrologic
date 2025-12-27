@@ -64,9 +64,13 @@ const DocumentsPage = () => {
   // Build full folder path hierarchy (parent → child)
   const [folderChain, setFolderChain] = useState([]);
 
+  const [entryType, setEntryType] = useState("ROOT");
+  // ROOT | SUB
+
   const loadFolderHierarchy = async () => {
-    if (safeFolderId === 0) {
+    if (!safeFolderId || safeFolderId === 0) {
       setFolderChain([]);
+      setEntryType("ROOT");
       setFolderPerms(null);
       return;
     }
@@ -74,12 +78,6 @@ const DocumentsPage = () => {
     try {
       let currentId = safeFolderId;
       const path = [];
-
-      // Load current folder (this contains permissions)
-      const currentRes = await getFolderById(currentId);
-      const currentFolder = currentRes.data;
-
-      setFolderPerms(currentFolder);
 
       while (currentId) {
         const res = await getFolderById(currentId);
@@ -91,6 +89,16 @@ const DocumentsPage = () => {
       }
 
       setFolderChain(path);
+
+      // ENTRY TYPE LOGIC
+      if (path.length > 1) {
+        setEntryType("SUB");
+      } else {
+        setEntryType("ROOT");
+      }
+
+      // permissions always come from CURRENT folder
+      setFolderPerms(path[path.length - 1]);
     } catch (err) {
       console.error("Hierarchy Error:", err);
     }
@@ -338,17 +346,29 @@ const DocumentsPage = () => {
           "
           >
             {[
+              // ✅ Dashboard (always first)
+              { label: "Dashboard", to: "/dashboard" },
+
+              // ✅ ADMIN / TECHSALES ONLY → Customer
+              (user.role === "admin" || user.role === "techsales") &&
+                customerName && {
+                  label: customerName,
+                  to: `/admin/company/${projectId}`, // keep as per your routing
+                },
+
+              // ✅ Projects (both admin + customer)
               { label: "Projects", to: "/projects" },
-              customerName && {
-                label: customerName,
-                to: `/projects/${projectId}`,
-              },
+
+              // ✅ Project → Folders
               projectName && {
-                label: projectName,
+                label: `${projectName} - Folders`,
                 to: `/projects/${projectId}/folders`,
               },
+
+              // ✅ Folder chain (root → subfolders)
               ...folderChain.map((f, i) => ({
                 label: f.name,
+                // ❌ last item = ACTIVE (Documents page, non-clickable)
                 to:
                   i === folderChain.length - 1
                     ? null
@@ -365,59 +385,53 @@ const DocumentsPage = () => {
                     <Link
                       to={item.to}
                       className="
-                      text-gray-700 font-semibold hover:text-indigo-600 
-                      transition-all duration-300 relative 
-                      px-1 sm:px-1.5 md:px-2.5 
-                      py-0.5 sm:py-0.5 md:py-1 
-                      rounded-md sm:rounded-lg
-                      hover:bg-white/80 hover:shadow-sm
-                      after:content-[''] after:absolute after:bottom-0.5
-                      after:left-1 sm:after:left-1.5 md:after:left-2.5 
-                      after:right-1 sm:after:right-1.5 md:after:right-2.5 
-                      after:h-0.5
-                      after:bg-gradient-to-r after:from-indigo-400
-                      after:via-indigo-600 after:to-indigo-400
-                      after:scale-x-0 after:transition-transform
-                      after:duration-300 after:rounded-full
-                      hover:after:scale-x-100
-                    "
+            text-gray-700 font-semibold hover:text-indigo-600
+            transition-all duration-300 relative
+            px-1 sm:px-1.5 md:px-2.5
+            py-0.5 sm:py-0.5 md:py-1
+            rounded-md sm:rounded-lg
+            hover:bg-white/80 hover:shadow-sm
+            after:content-[''] after:absolute after:bottom-0.5
+            after:left-1 sm:after:left-1.5 md:after:left-2.5
+            after:right-1 sm:after:right-1.5 md:after:right-2.5
+            after:h-0.5
+            after:bg-gradient-to-r after:from-indigo-400
+            after:via-indigo-600 after:to-indigo-400
+            after:scale-x-0 after:transition-transform
+            after:duration-300 after:rounded-full
+            hover:after:scale-x-100
+          "
                     >
                       {item.label}
                     </Link>
                   ) : (
+                    // 🔵 ACTIVE (current folder / documents)
                     <span
                       className="
-                    text-indigo-600 font-bold relative 
-                    px-1 sm:px-1.5 md:px-2.5 
-                    py-0.5 sm:py-0.5 md:py-1 
-                    rounded-md sm:rounded-lg
-                    bg-gradient-to-br from-indigo-50 via-white to-indigo-50
-                    shadow-sm border border-indigo-100/50
-                    hover:shadow-md transition-all duration-300
-                  "
+            text-indigo-600 font-bold relative
+            px-1 sm:px-1.5 md:px-2.5
+            py-0.5 sm:py-0.5 md:py-1
+            rounded-md sm:rounded-lg
+            bg-gradient-to-br from-indigo-50 via-white to-indigo-50
+            shadow-sm border border-indigo-100/50
+          "
                     >
                       {item.label}
                       <span
                         className="
-                      absolute bottom-0.5 
-                      left-1 sm:left-1.5 md:left-2.5 
-                      right-1 sm:right-1.5 md:right-2.5 
-                      h-0.5 
-                      bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-500
-                      rounded-full shadow-sm
-                    "
-                      ></span>
+              absolute bottom-0.5
+              left-1 sm:left-1.5 md:left-2.5
+              right-1 sm:right-1.5 md:right-2.5
+              h-0.5
+              bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-500
+              rounded-full shadow-sm
+            "
+                      />
                     </span>
                   )}
 
                   {index < arr.length - 1 && (
-                    <span
-                      className="
-                    text-gray-400 font-medium transition-all duration-300
-                    hover:text-indigo-500 hover:scale-110 cursor-default
-                    text-sm sm:text-base md:text-lg
-                  "
-                    >
+                    <span className="text-gray-400 font-medium text-sm sm:text-base md:text-lg">
                       ›
                     </span>
                   )}
@@ -459,7 +473,7 @@ const DocumentsPage = () => {
             title="Upload not allowed in this folder"
           >
             <span className="text-xl">🚫</span>
-            <span>Upload Disabled for This Folder</span>
+            <span>Upload Disabled</span>
           </div>
         )}
       </div>
