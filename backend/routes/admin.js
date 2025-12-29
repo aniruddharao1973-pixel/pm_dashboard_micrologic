@@ -11,6 +11,7 @@ import {
   deleteCompany,
   deleteProject,
   getProjects,
+  validateDuplicate,
 } from "../controllers/adminController.js";
 
 // import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
@@ -39,6 +40,17 @@ router.post(
   authMiddleware,
   requireAdminOrTechSales,
   createProject
+);
+
+/* ---------------------------------------------------
+    Duplicate Validation
+--------------------------------------------------- */
+
+router.get(
+  "/validate",
+  authMiddleware,
+  requireAdminOrTechSales,
+  validateDuplicate
 );
 
 /* ---------------------------------------------------

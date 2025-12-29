@@ -16,6 +16,7 @@
     "axios": "^1.13.2",
     "diff": "^8.0.2",
     "docx": "^9.5.1",
+    "framer-motion": "^12.23.26",
     "lucide-react": "^0.562.0",
     "mammoth": "^1.11.0",
     "pdf-lib": "^1.17.1",

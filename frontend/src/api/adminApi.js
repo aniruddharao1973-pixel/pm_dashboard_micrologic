@@ -8,21 +8,24 @@ export const useAdminApi = () => {
       CUSTOMER / COMPANY
   --------------------------------------------- */
 
-    // Create new customer (creates company + admin only)
-    const createCustomer = (payload) =>
-      api.post("/admin/create-customer", payload);
-
+  // Create new customer (creates company + admin only)
+  const createCustomer = (payload) =>
+    api.post("/admin/create-customer", payload);
 
   // Get list of companies + their admin users
   const getCustomers = () => api.get("/admin/customers");
 
   // Fetch COMPANY profile (company + users + projects)
-  const getCustomer = (companyId) =>
-    api.get(`/admin/company/${companyId}`);
+  const getCustomer = (companyId) => api.get(`/admin/company/${companyId}`);
 
   // Update COMPANY profile
   const updateCustomer = (companyId, payload) =>
     api.put(`/admin/company/${companyId}`, payload);
+
+  /* ---------------------------------------------
+    LIVE DUPLICATE VALIDATION (CREATE + EDIT)
+--------------------------------------------- */
+  const validateDuplicate = (params) => api.get("/admin/validate", { params });
 
   /* ---------------------------------------------
       DELETE ENTIRE COMPANY 
@@ -34,8 +37,7 @@ export const useAdminApi = () => {
   /* ---------------------------------------------
       PROJECTS
   --------------------------------------------- */
-  const createProject = (payload) =>
-    api.post("/admin/create-project", payload);
+  const createProject = (payload) => api.post("/admin/create-project", payload);
 
   // Backend route exists: GET /admin/projects
   const getProjects = () => api.get("/admin/projects");
@@ -43,8 +45,7 @@ export const useAdminApi = () => {
   /* ---------------------------------------------
       FOLDERS
   --------------------------------------------- */
-  const createFolder = (payload) =>
-    api.post("/admin/create-folder", payload);
+  const createFolder = (payload) => api.post("/admin/create-folder", payload);
 
   /* ---------------------------------------------
       EMAIL LOGS + RESEND CREDENTIALS
@@ -54,29 +55,28 @@ export const useAdminApi = () => {
   const resendCredentials = (customerId) =>
     api.post(`/admin/resend/${customerId}`);
 
-
   /* ---------------------------------------------
       Delete Project
   --------------------------------------------- */
 
   const deleteProject = (projectId) =>
-  api.delete(`/admin/project/${projectId}`);
-
+    api.delete(`/admin/project/${projectId}`);
 
   /* ---------------------------------------------
       EXPORT FUNCTIONS
   --------------------------------------------- */
-return {
-  createCustomer,
-  getCustomers,
-  getCustomer,
-  updateCustomer,
-  deleteCompany,
-  createProject,
-  createFolder,
-  getProjects,
-  deleteProject,
-  getEmailLogs,
-  resendCredentials,
-};
+  return {
+    createCustomer,
+    getCustomers,
+    getCustomer,
+    updateCustomer,
+    deleteCompany,
+    createProject,
+    createFolder,
+    getProjects,
+    deleteProject,
+    getEmailLogs,
+    resendCredentials,
+    validateDuplicate, // ✅ NEW
+  };
 };
