@@ -30,6 +30,7 @@ import CustomerRecycleBin from "./pages/customer/RecycleBin";
 
 import ResetPassword from "./pages/ResetPassword";
 import SubFoldersPage from "./pages/SubFoldersPage";
+import AppToast from "./components/toast/AppToast";
 
 // const ProtectedRoute = ({ children }) => {
 //   const { isAuthenticated, loading } = useAuth();
@@ -315,7 +316,9 @@ const App = () => {
       </Routes>
 
       {/* ⭐ Toast Container must be here */}
-      <ToastContainer position="top-center" autoClose={2500} theme="colored" />
+      {/* <ToastContainer position="top-center" autoClose={2500} theme="colored" /> */}
+
+      <AppToast />
     </div>
   );
 };

@@ -314,6 +314,7 @@
 import React from "react";
 import { getFileIcon } from "../utils/fileIcons";
 import { formatDate } from "../utils/formatDate";
+import { Eye, Ban, User, FileText, Clock, Calendar, Trash2 } from "lucide-react";
 
 const FileCard = ({
   document,
@@ -353,20 +354,20 @@ const FileCard = ({
   return (
     <div
       className="
-        group relative overflow-hidden
-        bg-gradient-to-br from-white to-amber-50
-        border-2 border-amber-200
-        rounded-xl sm:rounded-2xl
-        shadow-lg
-        p-4 sm:p-6
-        hover:shadow-2xl hover:border-orange-300
-        hover:-translate-y-1 hover:scale-[1.01]
-        transition-all duration-300 ease-out
-        mb-4 sm:mb-6
-      "
+    group relative overflow-hidden
+    bg-gradient-to-br from-violet-50 to-indigo-100
+    border border-violet-200
+    rounded-xl sm:rounded-2xl
+    shadow-lg
+    p-4 sm:p-6
+    hover:shadow-2xl hover:border-violet-300
+    hover:-translate-y-1 hover:scale-[1.01]
+    transition-all duration-300 ease-out
+    mb-4 sm:mb-6
+  "
     >
       {/* DELETE BUTTON (mobile-visible, desktop-hover) */}
-      {canDelete && (
+      {/* {canDelete && (
         <button
           onClick={onDelete}
           title="Delete Document"
@@ -406,6 +407,36 @@ const FileCard = ({
             />
           </svg>
         </button>
+      )} */}
+
+{/* DELETE BUTTON (mobile-visible, desktop-hover) */}
+      {canDelete && (
+        <button
+          onClick={onDelete}
+          title="Delete Document"
+          className="
+            absolute bottom-4 right-4 sm:bottom-6 sm:right-6
+            z-10
+            opacity-100 sm:opacity-0
+            pointer-events-auto sm:pointer-events-none
+            sm:group-hover:opacity-100
+            sm:group-hover:pointer-events-auto
+            p-2 sm:p-2.5
+            rounded-lg sm:rounded-xl
+            bg-white/80 backdrop-blur-md
+            border border-red-200/50
+            text-red-500
+            shadow-lg shadow-red-500/20
+            hover:bg-red-500 hover:text-white
+            hover:border-red-500
+            hover:shadow-2xl hover:shadow-red-500/40
+            hover:-translate-y-0.5
+            active:translate-y-0
+            transition-all duration-300 ease-out
+          "
+        >
+          <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2} />
+        </button>
       )}
 
       <div className="flex flex-col sm:flex-row gap-4">
@@ -436,11 +467,11 @@ const FileCard = ({
               px-2 py-0.5
               bg-white
               rounded-md
-              border-2 border-amber-200
+              border-2 border-blue-200
               shadow
             "
           >
-            <span className="text-[10px] font-bold text-orange-700">
+            <span className="text-[10px] font-bold text-blue-700">
               {fileType}
             </span>
           </div>
@@ -448,7 +479,7 @@ const FileCard = ({
 
         {/* Content */}
         <div className="flex-1">
-          <h3 className="text-base sm:text-lg font-bold text-gray-800 group-hover:text-orange-700 transition-colors line-clamp-2 mb-2">
+          <h3 className="text-base sm:text-lg font-bold text-gray-800 group-hover:text-purple-700 transition-colors line-clamp-2 mb-2">
             {document.original_filename || document.filename || document.title}
           </h3>
 
@@ -467,22 +498,23 @@ const FileCard = ({
                 "
                 title="View File"
               >
-                👁
+                <Eye className="h-4 w-4" />
               </button>
             ) : (
               <div className="p-2 rounded-lg bg-gray-100 border-2 border-gray-200 text-gray-400 cursor-not-allowed">
-                🚫
+                <Ban className="h-4 w-4" />
               </div>
             )}
           </div>
 
           {/* Meta */}
           <div className="flex flex-wrap gap-2 text-xs mb-3">
-            <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-300">
+            <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-900 border-blue-300">
               👤 {uploadedBy}
             </span>
-            <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-700 border border-purple-300">
-              📝 Version {document.current_version}
+            <span className="px-3 py-1 rounded-full bg-purple-100 text-purple-900 border border-purple-300">
+              <FileText className="h-3 w-3" /> Version{" "}
+              {document.current_version}
             </span>
           </div>
 
@@ -492,7 +524,7 @@ const FileCard = ({
             className="
               inline-flex items-center gap-2
               text-xs sm:text-sm font-semibold
-              text-purple-600
+              text-purple-800
               bg-purple-50
               px-4 py-2
               rounded-xl
@@ -501,12 +533,13 @@ const FileCard = ({
               transition
             "
           >
-            ⏱ View Version History
+            <Clock className="h-4 w-4" /> View Version History
           </button>
 
           {/* Date */}
-          <div className="mt-3 pt-2 border-t border-amber-200 text-[10px] sm:text-xs text-amber-600 flex items-center gap-2">
-            📅 Uploaded: {formatDate(document.created_at)}
+          <div className="mt-3 pt-2 border-t border-blue-200 text-[10px] sm:text-xs text-purple-700 flex items-center gap-2">
+            <Calendar className="h-3 w-3" /> Uploaded:{" "}
+            {formatDate(document.created_at)}
           </div>
         </div>
       </div>

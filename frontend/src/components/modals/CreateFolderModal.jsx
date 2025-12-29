@@ -130,6 +130,7 @@
 // components\modals\CreateFolderModal.jsx
 import React, { useState } from "react";
 import { X, FolderPlus, Shield, Users } from "lucide-react";
+import { createPortal } from "react-dom";
 
 const CreateFolderModal = ({
   open,
@@ -158,8 +159,8 @@ const CreateFolderModal = ({
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-gradient-to-br from-slate-900/50 via-slate-900/60 to-slate-900/50 backdrop-blur-md"
         onClick={onClose}
@@ -406,7 +407,8 @@ const CreateFolderModal = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.getElementById("modal-root")
   );
 };
 
