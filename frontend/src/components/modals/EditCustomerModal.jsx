@@ -1429,7 +1429,7 @@ export default function EditCustomerModal({
       ) : (
         <div className="space-y-6">
           {/* Header with Status */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-amber-500 via-amber-600 to-orange-700 rounded-2xl p-6 text-white">
+          <div className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-purple-700 rounded-2xl p-6 text-white">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/20" />
