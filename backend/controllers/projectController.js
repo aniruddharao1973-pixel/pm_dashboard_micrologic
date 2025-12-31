@@ -139,25 +139,3 @@ export const createProject = async (req, res) => {
     client.release();
   }
 };
-
-// ⭐ ADMIN: Get projects by companyId
-export const getProjectsByCompany = async (req, res) => {
-  const { companyId } = req.params;
-
-  try {
-    const result = await pool.query(
-      `
-      SELECT id, name, status, created_at
-      FROM projects
-      WHERE company_id = $1
-      ORDER BY created_at DESC
-      `,
-      [companyId]
-    );
-
-    res.json(result.rows);
-  } catch (err) {
-    console.error("GetProjectsByCompany Error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-};

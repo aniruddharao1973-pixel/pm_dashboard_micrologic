@@ -8,12 +8,12 @@ import { insertEmailLog, getEmailLogs } from "../models/emailLogModel.js";
 import { seedDefaultFolders } from "../services/folderSeeder.js";
 
 /* ---------------------------------------------------
-   1️⃣ Create Customer (Admin / TechSales Only) — FINAL
+   1️⃣ Create Customer (Admin Only) — CLEANED AUTO-CREATION)
 --------------------------------------------------- */
 export const createCustomer = async (req, res) => {
   const {
     name,
-    email,
+    email, // customer admin email
     externalId,
     location,
     contactPerson,
@@ -21,127 +21,158 @@ export const createCustomer = async (req, res) => {
     registerDate,
   } = req.body;
 
-  const client = await pool.connect();
+  console.log("\n=== Create Customer Called ===");
+  console.log("Incoming Payload:", {
+    name,
+    email,
+    externalId,
+    location,
+    contactPerson,
+    contactPhone,
+    registerDate,
+  });
 
   try {
-    await client.query("BEGIN");
-
-    const normalizedEmail = email.toLowerCase().trim();
-    const normalizedPhone = contactPhone?.replace(/\s+/g, "");
-
-    /* 1️⃣ Admin Email */
-    const adminExists = await client.query(
-      "SELECT 1 FROM users WHERE email = $1 LIMIT 1",
-      [normalizedEmail]
+    /* ---------------------------------------------------
+       1️⃣ VALIDATION: Admin Email must be unique
+    --------------------------------------------------- */
+    const adminExists = await pool.query(
+      "SELECT id FROM users WHERE email = $1 LIMIT 1",
+      [email]
     );
+
     if (adminExists.rows.length > 0) {
-      await client.query("ROLLBACK");
-      return res.status(409).json({ message: "Admin email already exists" });
+      return res.status(200).json({
+        status: "exists",
+        message: "Customer Admin Email already in use",
+      });
     }
 
-    /* 2️⃣ Company Name */
-    const nameExists = await client.query(
-      "SELECT 1 FROM companies WHERE lower(name) = lower($1) LIMIT 1",
+    /* ---------------------------------------------------
+       2️⃣ CREATE OR GET COMPANY
+    --------------------------------------------------- */
+    const compRes = await pool.query(
+      "SELECT id FROM companies WHERE LOWER(name) = LOWER($1) LIMIT 1",
       [name]
     );
-    if (nameExists.rows.length > 0) {
-      await client.query("ROLLBACK");
-      return res.status(409).json({ message: "Company name already exists" });
-    }
 
-    /* 3️⃣ Customer ID */
-    if (externalId) {
-      const extExists = await client.query(
-        "SELECT 1 FROM companies WHERE external_id = $1 LIMIT 1",
-        [externalId]
+    let companyId;
+
+    if (compRes.rows.length > 0) {
+      companyId = compRes.rows[0].id;
+      console.log("Existing company found:", companyId);
+    } else {
+      console.log("Creating NEW company:", name);
+
+      const newComp = await pool.query(
+        `INSERT INTO companies
+        (name, external_id, location, contact_person, contact_phone, register_date, created_by)
+      VALUES ($1,$2,$3,$4,$5,$6,$7)
+      RETURNING id`,
+        [
+          name,
+          externalId || null,
+          location || null,
+          contactPerson || null,
+          contactPhone || null,
+          registerDate || null,
+          req.user.id,
+        ]
       );
-      if (extExists.rows.length > 0) {
-        await client.query("ROLLBACK");
-        return res.status(409).json({ message: "Customer ID already exists" });
-      }
+
+      companyId = newComp.rows[0].id;
+      console.log("New company created:", companyId);
     }
 
-    /* 4️⃣ Phone */
-    if (normalizedPhone) {
-      const phoneExists = await client.query(
-        "SELECT 1 FROM companies WHERE contact_phone = $1 LIMIT 1",
-        [normalizedPhone]
-      );
-      if (phoneExists.rows.length > 0) {
-        await client.query("ROLLBACK");
-        return res.status(409).json({ message: "Phone number already exists" });
-      }
-    }
+    /* ---------------------------------------------------
+       3️⃣ CREATE CUSTOMER ADMIN USER
+    --------------------------------------------------- */
+    const adminTempPassword = crypto.randomBytes(6).toString("hex");
+    const adminHash = await bcrypt.hash(adminTempPassword, 12);
 
-    /* 5️⃣ Create Company */
-    const companyRes = await client.query(
-      `INSERT INTO companies
-       (name, external_id, location, contact_person, contact_phone, register_date, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)
-       RETURNING id`,
-      [
-        name,
-        externalId || null,
-        location || null,
-        contactPerson || null,
-        normalizedPhone || null,
-        registerDate || null,
-        req.user.id,
-      ]
-    );
-
-    const companyId = companyRes.rows[0].id;
-
-    /* 6️⃣ Create Admin User */
-    const tempPassword = crypto.randomBytes(6).toString("hex");
-    const hash = await bcrypt.hash(tempPassword, 12);
-
-    const adminRes = await client.query(
+    const adminInsert = await pool.query(
       `INSERT INTO users (name, email, password_hash, role, must_change_password)
-       VALUES ($1,$2,$3,'customer',true)
-       RETURNING id, name, email`,
-      [name, normalizedEmail, hash]
+       VALUES ($1, $2, $3, 'customer', true)
+       RETURNING id, name, email, role`,
+      [name, email, adminHash]
     );
 
-    const adminUser = adminRes.rows[0];
+    const customerAdmin = adminInsert.rows[0];
 
-    await client.query(
+    await pool.query(
       `INSERT INTO user_companies (user_id, company_id)
-       VALUES ($1,$2)`,
-      [adminUser.id, companyId]
+       VALUES ($1, $2)`,
+      [customerAdmin.id, companyId]
     );
 
-    await client.query("COMMIT");
-
-    /* 7️⃣ Send Email (background) */
+    /* ---------------------------------------------------
+       4️⃣ SEND ADMIN EMAIL (NON-BLOCKING)
+    --------------------------------------------------- */
     Promise.resolve().then(async () => {
       try {
-        await sendCustomerCredentials({
-          toEmail: adminUser.email,
-          name: adminUser.name,
-          tempPassword,
+        console.log("📧 Sending admin email in background...");
+        const emailResp = await sendCustomerCredentials({
+          toEmail: customerAdmin.email,
+          name: customerAdmin.name,
+          tempPassword: adminTempPassword,
         });
-      } catch (e) {
-        console.error("Email send failed:", e);
+
+        await insertEmailLog({
+          customer_id: customerAdmin.id,
+          email: customerAdmin.email,
+          temporary_password: adminTempPassword,
+          subject: "Your PM Dashboard Admin Login Credentials",
+          body: JSON.stringify(emailResp),
+          status: "sent",
+          error: null,
+        });
+
+        console.log("📧 Admin email sent & logged.");
+      } catch (err) {
+        console.error("❌ Background admin email failed:", err);
       }
     });
 
-    return res.status(201).json({
-      message: "Customer created successfully",
+    /* ---------------------------------------------------
+       5️⃣ FINAL RESPONSE
+    --------------------------------------------------- */
+    res.json({
+      message: "Customer created successfully (Admin only)",
       companyId,
-      adminUser,
+      adminUser: customerAdmin,
+      adminTempPassword,
+      emailSent: true,
     });
   } catch (err) {
-    await client.query("ROLLBACK");
+    console.error("CreateCustomer ERROR:", err);
 
-    if (err.code === "23505") {
-      return res.status(409).json({ message: "Duplicate value detected" });
+    // Duplicate contact phone
+    if (
+      err.code === "23505" &&
+      err.constraint === "companies_contact_phone_unique"
+    ) {
+      return res.status(409).json({
+        status: "duplicate",
+        field: "contactPhone",
+        message: "Contact phone number already exists",
+      });
     }
 
-    console.error("CreateCustomer ERROR:", err);
-    return res.status(500).json({ message: "Server error" });
-  } finally {
-    client.release();
+    // Duplicate external ID
+    if (
+      err.code === "23505" &&
+      err.constraint === "companies_external_id_unique"
+    ) {
+      return res.status(409).json({
+        status: "duplicate",
+        field: "externalId",
+        message: "External ID already exists",
+      });
+    }
+
+    return res.status(500).json({
+      message: "Failed to create customer",
+    });
   }
 };
 
@@ -635,14 +666,14 @@ export const deleteCompany = async (req, res) => {
 };
 
 /* ---------------------------------------------------
-   9️⃣ Update Company Profile (Admin Only) — FINAL
+   9️⃣ Update Company Profile (Admin Only)
 --------------------------------------------------- */
 export const updateCustomerProfile = async (req, res) => {
   const { companyId } = req.params;
+
   const {
     name,
     externalId,
-    email,
     location,
     contactPerson,
     contactEmail,
@@ -650,28 +681,10 @@ export const updateCustomerProfile = async (req, res) => {
     registerDate,
   } = req.body;
 
-  // 🔍 Fetch current admin user (email + id)
-  const adminRes = await pool.query(
-    `
-  SELECT u.id, u.email, u.name
-  FROM users u
-  JOIN user_companies uc ON uc.user_id = u.id
-  WHERE uc.company_id = $1
-  LIMIT 1
-  `,
-    [companyId]
-  );
-
-  if (adminRes.rows.length === 0) {
-    return res.status(404).json({ message: "Admin user not found" });
-  }
-
-  const adminUser = adminRes.rows[0];
-  const oldEmail = adminUser.email;
-
   try {
+    // 1️⃣ Check if company exists
     const comp = await pool.query(
-      "SELECT id FROM companies WHERE id = $1 LIMIT 1",
+      "SELECT * FROM companies WHERE id = $1 LIMIT 1",
       [companyId]
     );
 
@@ -679,65 +692,19 @@ export const updateCustomerProfile = async (req, res) => {
       return res.status(404).json({ message: "Company not found" });
     }
 
-    /* Uniqueness checks */
-    if (name) {
-      const exists = await pool.query(
-        "SELECT 1 FROM companies WHERE lower(name)=lower($1) AND id<>$2",
-        [name, companyId]
-      );
-      if (exists.rows.length > 0) {
-        return res.status(409).json({ message: "Company name already exists" });
-      }
-    }
+    const oldCompany = comp.rows[0];
 
-    if (externalId) {
-      const exists = await pool.query(
-        "SELECT 1 FROM companies WHERE external_id=$1 AND id<>$2",
-        [externalId, companyId]
-      );
-      if (exists.rows.length > 0) {
-        return res.status(409).json({ message: "Customer ID already exists" });
-      }
-    }
-
-    if (contactPhone) {
-      const exists = await pool.query(
-        "SELECT 1 FROM companies WHERE contact_phone=$1 AND id<>$2",
-        [contactPhone.replace(/\s+/g, ""), companyId]
-      );
-      if (exists.rows.length > 0) {
-        return res.status(409).json({ message: "Phone number already exists" });
-      }
-    }
-
-    if (email) {
-      const emailExists = await pool.query(
-        `
-    SELECT 1 FROM users
-    WHERE lower(email) = lower($1)
-      AND id NOT IN (
-        SELECT user_id FROM user_companies WHERE company_id = $2
-      )
-    LIMIT 1
-    `,
-        [email.trim(), companyId]
-      );
-
-      if (emailExists.rows.length > 0) {
-        return res.status(409).json({ message: "Admin email already exists" });
-      }
-    }
-
+    // 2️⃣ Update company fields
     const updated = await pool.query(
       `UPDATE companies
-       SET
-         name = COALESCE($1, name),
-         external_id = COALESCE($2, external_id),
-         location = COALESCE($3, location),
-         contact_person = COALESCE($4, contact_person),
-         contact_email = COALESCE($5, contact_email),
-         contact_phone = COALESCE($6, contact_phone),
-         register_date = COALESCE($7, register_date)
+         SET
+           name = COALESCE($1, name),
+           external_id = COALESCE($2, external_id),
+           location = COALESCE($3, location),
+           contact_person = COALESCE($4, contact_person),
+           contact_email = COALESCE($5, contact_email),
+           contact_phone = COALESCE($6, contact_phone),
+           register_date = COALESCE($7, register_date)
        WHERE id = $8
        RETURNING *`,
       [
@@ -746,38 +713,18 @@ export const updateCustomerProfile = async (req, res) => {
         location,
         contactPerson,
         contactEmail,
-        contactPhone?.replace(/\s+/g, ""),
+        contactPhone,
         registerDate,
         companyId,
       ]
     );
-
-    if (email && email.trim().toLowerCase() !== oldEmail) {
-      const newEmail = email.trim().toLowerCase();
-
-      await pool.query(
-        `
-    UPDATE users
-    SET
-      email = $1,
-      password_reset_token = NULL,
-      password_reset_expires = NULL
-    WHERE id = $2
-    `,
-        [newEmail, adminUser.id]
-      );
-    }
 
     res.json({
       message: "Company profile updated successfully",
       company: updated.rows[0],
     });
   } catch (err) {
-    if (err.code === "23505") {
-      return res.status(409).json({ message: "Duplicate value detected" });
-    }
-
-    console.error("UpdateCustomerProfile ERROR:", err);
+    console.error("UpdateCompanyProfile ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -819,117 +766,6 @@ export const deleteProject = async (req, res) => {
     res.json({ message: "Project deleted successfully" });
   } catch (err) {
     console.error("❌ deleteProject Error", err);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-/* ---------------------------------------------------
-   🔎 LIVE DUPLICATE CHECK (CREATE + EDIT)
---------------------------------------------------- */
-
-/**
- * type: email | phone | externalId | companyName
- * value: string
- * companyId: optional (used in edit to exclude self)
- */
-export const validateDuplicate = async (req, res) => {
-  const { type, value, companyId } = req.query;
-
-  if (!type || !value) {
-    return res.status(400).json({ exists: false });
-  }
-
-  try {
-    let query = "";
-    let params = [];
-
-    switch (type) {
-      case "email":
-        query = `
-          SELECT 1 FROM users
-          WHERE lower(email) = lower($1)
-          LIMIT 1
-        `;
-        params = [value.trim()];
-        break;
-
-      case "companyName":
-        query = `
-          SELECT 1 FROM companies
-          WHERE lower(name) = lower($1)
-          ${companyId ? "AND id <> $2" : ""}
-          LIMIT 1
-        `;
-        params = companyId ? [value.trim(), companyId] : [value.trim()];
-        break;
-
-      case "externalId":
-        query = `
-          SELECT 1 FROM companies
-          WHERE external_id = $1
-          ${companyId ? "AND id <> $2" : ""}
-          LIMIT 1
-        `;
-        params = companyId ? [value.trim(), companyId] : [value.trim()];
-        break;
-
-      case "phone":
-        query = `
-          SELECT 1 FROM companies
-          WHERE contact_phone = $1
-          ${companyId ? "AND id <> $2" : ""}
-          LIMIT 1
-        `;
-        params = companyId
-          ? [value.replace(/\s+/g, ""), companyId]
-          : [value.replace(/\s+/g, "")];
-        break;
-
-      default:
-        return res.status(400).json({ exists: false });
-    }
-
-    const result = await pool.query(query, params);
-
-    return res.json({
-      exists: result.rows.length > 0,
-    });
-  } catch (err) {
-    console.error("Live duplicate check error:", err);
-    return res.status(500).json({ exists: false });
-  }
-};
-
-/* ---------------------------------------------------
-   8️⃣ Get Customer (Edit Modal)
---------------------------------------------------- */
-export const getCustomer = async (req, res) => {
-  const { companyId } = req.params;
-
-  try {
-    const result = await pool.query(
-      `
-  SELECT
-    c.*,
-    u.email AS admin_email
-  FROM companies c
-  JOIN user_companies uc ON uc.company_id = c.id
-  JOIN users u ON u.id = uc.user_id AND u.role = 'customer'
-  WHERE c.id = $1
-  LIMIT 1
-  `,
-      [companyId]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: "Company not found" });
-    }
-
-    res.json({
-      company: result.rows[0],
-    });
-  } catch (err) {
-    console.error("GetCustomer Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

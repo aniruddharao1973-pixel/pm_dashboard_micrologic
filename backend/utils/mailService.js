@@ -185,15 +185,6 @@ function getGreeting() {
    - toEmail, name, tempPassword
 ============================================================ */
 export async function sendCustomerCredentials({ toEmail, name, tempPassword }) {
-  // 🛑 SAFETY GUARD — DO NOT SEND CREDENTIAL EMAIL WITHOUT PASSWORD
-  if (!tempPassword) {
-    console.warn(
-      "sendCustomerCredentials blocked: tempPassword missing for",
-      toEmail
-    );
-    return; // silently exit — no email sent
-  }
-
   const greeting = getGreeting();
   const logoAttachment = await buildInlineLogoAttachment();
 

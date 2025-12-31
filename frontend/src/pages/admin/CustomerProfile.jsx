@@ -7,7 +7,6 @@ import CreateProjectModal from "../../components/modals/CreateProjectModal";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import Breadcrumb from "../../components/Breadcrumb";
-
 import {
   Building2,
   User,
@@ -44,8 +43,8 @@ import {
 
 export default function CustomerProfile() {
   const { companyId } = useParams();
-  const { getCompanyProfile, deleteProject } = useAdminApi();
-
+  const { getCustomer } = useAdminApi();
+  const { deleteProject } = useAdminApi();
   const [createOpen, setCreateOpen] = useState(false);
 
   const [data, setData] = useState({
@@ -77,15 +76,15 @@ export default function CustomerProfile() {
         }
 
         console.log("Fetching company profile:", companyId);
-        const res = await getCompanyProfile(companyId);
-
-        console.log("COMPANY PROFILE RESPONSE:", res.data);
+        const res = await getCustomer(companyId);
+        if (cancelled) return;
 
         const companyData = res.data || {};
+        const adminUser = (companyData.users && companyData.users[0]) || null;
 
         setData({
           company: companyData.company || null,
-          admin: companyData.users?.[0] || null,
+          admin: adminUser,
           projects: companyData.projects || [],
         });
       } catch (err) {
@@ -692,17 +691,7 @@ export default function CustomerProfile() {
             setLoading(true);
 
             try {
-              // 1️⃣ Reload company (meta + admin)
-              const res = await getCompanyProfile(company.id);
-
-              console.log("AFTER CREATE - COMPANY PROFILE:", res.data);
-
-              setData({
-                company: res.data.company || null,
-                admin: res.data.users?.[0] || null,
-                projects: res.data.projects || [],
-              });
-
+              const res = await getCustomer(company.id);
               const companyData = res.data || {};
               const adminUser =
                 (companyData.users && companyData.users[0]) || null;

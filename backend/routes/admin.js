@@ -7,12 +7,10 @@ import {
   getCustomers,
   getCustomerById,
   getCompanyProfile,
-  getCustomer, // ✅ ADD THIS
   updateCustomerProfile,
   deleteCompany,
   deleteProject,
   getProjects,
-  validateDuplicate,
 } from "../controllers/adminController.js";
 
 // import { authMiddleware, requireRole } from "../middleware/authMiddleware.js";
@@ -44,17 +42,6 @@ router.post(
 );
 
 /* ---------------------------------------------------
-    Duplicate Validation
---------------------------------------------------- */
-
-router.get(
-  "/validate",
-  authMiddleware,
-  requireAdminOrTechSales,
-  validateDuplicate
-);
-
-/* ---------------------------------------------------
    4️⃣ Get All Customers
 --------------------------------------------------- */
 router.get("/customers", authMiddleware, requireAdminOrTechSales, getCustomers);
@@ -67,16 +54,6 @@ router.get(
   authMiddleware,
   requireAdminOrTechSales,
   getCustomerById
-);
-
-/* ---------------------------------------------------
-   5.5️⃣ Get Customer (Edit Modal)
---------------------------------------------------- */
-router.get(
-  "/customer/:companyId",
-  authMiddleware,
-  requireAdminOrTechSales,
-  getCustomer
 );
 
 /* ---------------------------------------------------

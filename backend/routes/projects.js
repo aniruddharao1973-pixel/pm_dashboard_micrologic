@@ -4,7 +4,6 @@ import { authMiddleware } from "../middleware/authMiddleware.js";
 import {
   getMyProjects,
   getProjectById,
-  getProjectsByCompany, // ✅ ADD
 } from "../controllers/projectController.js";
 import authorizeResource from "../middleware/authorizeResource.js";
 import { pool } from "../db.js";
@@ -33,8 +32,6 @@ router.get("/", authMiddleware, getMyProjects);
    ⭐ API: Get single project by ID
    (Fixes FoldersPage 404 error and returns company_name)
 --------------------------------------------------- */
-
-router.get("/company/:companyId", authMiddleware, getProjectsByCompany);
 
 router.get("/:projectId", authMiddleware, authorizeResource, getProjectById);
 
