@@ -1009,6 +1009,7 @@ import {
   User,
   Phone,
   Calendar,
+  Mail,
   Save,
   Info,
   CheckCircle2,
@@ -1152,6 +1153,7 @@ export default function EditCustomerModal({
   const [form, setForm] = useState({
     name: "",
     externalId: "",
+    email: "", // ✅ ADD
     location: "",
     contactPerson: "",
     contactPhone: "",
@@ -1186,6 +1188,7 @@ export default function EditCustomerModal({
         const mapped = {
           name: c.name || "",
           externalId: c.external_id || "",
+          email: c.admin_email || "", // ✅ REQUIRED from backend
           location: c.location || "",
           contactPerson: c.contact_person || "",
           contactPhone: c.contact_phone || "",
@@ -1239,6 +1242,7 @@ export default function EditCustomerModal({
       setForm({
         name: "",
         externalId: "",
+        email: "", // ✅ ADD
         location: "",
         contactPerson: "",
         contactPhone: "",
@@ -1277,6 +1281,8 @@ export default function EditCustomerModal({
         form.externalId,
         initialForm.externalId
       ),
+      email: isMeaningfullyChanged(form.email, initialForm.email), // ✅ ADD
+
       location: isMeaningfullyChanged(form.location, initialForm.location),
       contactPerson: isMeaningfullyChanged(
         form.contactPerson,
@@ -1331,6 +1337,22 @@ export default function EditCustomerModal({
           .catch(() => {});
       }
     }
+    if (name === "email" && value.trim() && initialForm?.email !== value) {
+      validateDuplicate({
+        type: "email",
+        value,
+        companyId, // ✅ exclude current company admin
+      })
+        .then(({ data }) => {
+          if (data.exists) {
+            setErrors((prev) => ({
+              ...prev,
+              email: "Email already exists",
+            }));
+          }
+        })
+        .catch(() => {});
+    }
   };
 
   // Reset to initial values
@@ -1368,6 +1390,7 @@ export default function EditCustomerModal({
 
       const payload = {
         ...form,
+        email: form.email.trim().toLowerCase(), // ✅ ADD
         contactPhone: form.contactPhone.replace(/\s+/g, ""),
       };
 
@@ -1466,32 +1489,12 @@ export default function EditCustomerModal({
               {/* Status Bar */}
               <div className="mt-4 flex items-center gap-4">
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-lg">
-                  <Hash className="w-4 h-4" />
-                  <span className="text-sm">{form.externalId || "N/A"}</span>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-lg">
                   <Calendar className="w-4 h-4" />
                   <span className="text-sm">
                     Since {formatDisplayDate(form.registerDate)}
                   </span>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Info Banner */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex gap-3">
-            <div className="p-1.5 bg-blue-100 rounded-lg h-fit">
-              <Info className="w-4 h-4 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-blue-900">
-                Editing Mode Active
-              </p>
-              <p className="text-sm text-blue-700 mt-0.5">
-                Modified fields are highlighted. Only changes will be saved to
-                the database.
-              </p>
             </div>
           </div>
 
@@ -1525,6 +1528,17 @@ export default function EditCustomerModal({
                   icon={Hash}
                   placeholder="Enter unique customer ID"
                   hasChanged={changedFields.externalId}
+                />
+                <FormInput
+                  label="Admin Email"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  error={errors.email}
+                  icon={Mail}
+                  placeholder="admin@company.com"
+                  hasChanged={changedFields.email}
                 />
               </div>
             </div>
@@ -1686,6 +1700,33 @@ export default function EditCustomerModal({
                   disabled={true}
                   required={false}
                 />
+              </div>
+            </div>
+
+            {/* Info Banner */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex gap-3">
+              <div className="p-1.5 bg-blue-100 rounded-lg h-fit">
+                <Info className="w-4 h-4 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-blue-900">
+                  Editing Mode Active
+                </p>
+                <p className="text-sm text-blue-700 mt-0.5">
+                  Modified fields are highlighted. Only changes will be saved to
+                  the database.
+                </p>
+
+                {changedFields.email && (
+                  <div className="mt-2 flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                    <Info className="w-4 h-4 mt-0.5" />
+                    <span>
+                      Changing the email will <b>not</b> reset the password. The
+                      customer can log in using the new email and existing
+                      password.
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 

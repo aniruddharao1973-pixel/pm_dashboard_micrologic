@@ -5,8 +5,8 @@ export const useAdminApi = () => {
   const api = useAxios();
 
   /* ---------------------------------------------
-      CUSTOMER / COMPANY
-  --------------------------------------------- */
+    CUSTOMER / COMPANY
+--------------------------------------------- */
 
   // Create new customer (creates company + admin only)
   const createCustomer = (payload) =>
@@ -15,8 +15,8 @@ export const useAdminApi = () => {
   // Get list of companies + their admin users
   const getCustomers = () => api.get("/admin/customers");
 
-  // Fetch COMPANY profile (company + users + projects)
-  const getCustomer = (companyId) => api.get(`/admin/company/${companyId}`);
+  // ✅ FIXED: Fetch customer for Edit modal
+  const getCustomer = (companyId) => api.get(`/admin/customer/${companyId}`);
 
   // Update COMPANY profile
   const updateCustomer = (companyId, payload) =>
@@ -41,6 +41,9 @@ export const useAdminApi = () => {
 
   // Backend route exists: GET /admin/projects
   const getProjects = () => api.get("/admin/projects");
+
+  const getCompanyProfile = (companyId) =>
+    api.get(`/admin/company/${companyId}`);
 
   /* ---------------------------------------------
       FOLDERS
@@ -69,6 +72,7 @@ export const useAdminApi = () => {
     createCustomer,
     getCustomers,
     getCustomer,
+    getCompanyProfile, // ✅ ADD
     updateCustomer,
     deleteCompany,
     createProject,

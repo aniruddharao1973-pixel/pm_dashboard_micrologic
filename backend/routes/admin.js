@@ -7,6 +7,7 @@ import {
   getCustomers,
   getCustomerById,
   getCompanyProfile,
+  getCustomer, // ✅ ADD THIS
   updateCustomerProfile,
   deleteCompany,
   deleteProject,
@@ -66,6 +67,16 @@ router.get(
   authMiddleware,
   requireAdminOrTechSales,
   getCustomerById
+);
+
+/* ---------------------------------------------------
+   5.5️⃣ Get Customer (Edit Modal)
+--------------------------------------------------- */
+router.get(
+  "/customer/:companyId",
+  authMiddleware,
+  requireAdminOrTechSales,
+  getCustomer
 );
 
 /* ---------------------------------------------------

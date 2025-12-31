@@ -642,12 +642,32 @@ export const updateCustomerProfile = async (req, res) => {
   const {
     name,
     externalId,
+    email,
     location,
     contactPerson,
     contactEmail,
     contactPhone,
     registerDate,
   } = req.body;
+
+  // 🔍 Fetch current admin user (email + id)
+  const adminRes = await pool.query(
+    `
+  SELECT u.id, u.email, u.name
+  FROM users u
+  JOIN user_companies uc ON uc.user_id = u.id
+  WHERE uc.company_id = $1
+  LIMIT 1
+  `,
+    [companyId]
+  );
+
+  if (adminRes.rows.length === 0) {
+    return res.status(404).json({ message: "Admin user not found" });
+  }
+
+  const adminUser = adminRes.rows[0];
+  const oldEmail = adminUser.email;
 
   try {
     const comp = await pool.query(
@@ -690,6 +710,24 @@ export const updateCustomerProfile = async (req, res) => {
       }
     }
 
+    if (email) {
+      const emailExists = await pool.query(
+        `
+    SELECT 1 FROM users
+    WHERE lower(email) = lower($1)
+      AND id NOT IN (
+        SELECT user_id FROM user_companies WHERE company_id = $2
+      )
+    LIMIT 1
+    `,
+        [email.trim(), companyId]
+      );
+
+      if (emailExists.rows.length > 0) {
+        return res.status(409).json({ message: "Admin email already exists" });
+      }
+    }
+
     const updated = await pool.query(
       `UPDATE companies
        SET
@@ -713,6 +751,22 @@ export const updateCustomerProfile = async (req, res) => {
         companyId,
       ]
     );
+
+    if (email && email.trim().toLowerCase() !== oldEmail) {
+      const newEmail = email.trim().toLowerCase();
+
+      await pool.query(
+        `
+    UPDATE users
+    SET
+      email = $1,
+      password_reset_token = NULL,
+      password_reset_expires = NULL
+    WHERE id = $2
+    `,
+        [newEmail, adminUser.id]
+      );
+    }
 
     res.json({
       message: "Company profile updated successfully",
@@ -843,5 +897,39 @@ export const validateDuplicate = async (req, res) => {
   } catch (err) {
     console.error("Live duplicate check error:", err);
     return res.status(500).json({ exists: false });
+  }
+};
+
+/* ---------------------------------------------------
+   8️⃣ Get Customer (Edit Modal)
+--------------------------------------------------- */
+export const getCustomer = async (req, res) => {
+  const { companyId } = req.params;
+
+  try {
+    const result = await pool.query(
+      `
+  SELECT
+    c.*,
+    u.email AS admin_email
+  FROM companies c
+  JOIN user_companies uc ON uc.company_id = c.id
+  JOIN users u ON u.id = uc.user_id AND u.role = 'customer'
+  WHERE c.id = $1
+  LIMIT 1
+  `,
+      [companyId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    res.json({
+      company: result.rows[0],
+    });
+  } catch (err) {
+    console.error("GetCustomer Error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };

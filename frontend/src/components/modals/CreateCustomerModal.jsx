@@ -1595,60 +1595,6 @@ export default function CreateCustomerModal({ open, onClose, onSuccess }) {
   return (
     <BaseModal open={open} onClose={onClose} title="Create Customer">
       <div className="space-y-6">
-        {/* Header with Progress */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-2xl p-6 text-white">
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/20" />
-            <div className="absolute -left-5 -bottom-5 w-24 h-24 rounded-full bg-white/20" />
-          </div>
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2.5 bg-white/20 backdrop-blur-sm rounded-xl">
-                <UserPlus className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold">New Customer Profile</h2>
-                <p className="text-sm text-blue-100">
-                  Fill in the details to create a customer account
-                </p>
-              </div>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="mt-4">
-              <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-blue-100">Completion Progress</span>
-                <span className="font-semibold">{completionPercentage}%</span>
-              </div>
-              <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-white rounded-full transition-all duration-500 ease-out"
-                  style={{ width: `${completionPercentage}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Info Banner */}
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-          <div className="p-1.5 bg-amber-100 rounded-lg h-fit">
-            <Info className="w-4 h-4 text-amber-600" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-amber-900">
-              Important Information
-            </p>
-            <p className="text-sm text-amber-700 mt-0.5">
-              All fields marked with{" "}
-              <span className="text-rose-500 font-medium">*</span> are
-              mandatory. The admin email will receive login credentials.
-            </p>
-          </div>
-        </div>
-
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Company Information Section */}
           <div className="space-y-5">
@@ -1865,6 +1811,62 @@ export default function CreateCustomerModal({ open, onClose, onSuccess }) {
                 disabled={true}
                 required={false}
               />
+            </div>
+          </div>
+
+          {/* Header with Progress */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-2xl p-6 text-white">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/20" />
+              <div className="absolute -left-5 -bottom-5 w-24 h-24 rounded-full bg-white/20" />
+            </div>
+
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2.5 bg-white/20 backdrop-blur-sm rounded-xl">
+                  <UserPlus className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold">
+                    New Customer Profile
+                  </h2>
+                  <p className="text-sm text-blue-100">
+                    Fill in the details to create a customer account
+                  </p>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mt-4">
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="text-blue-100">Completion Progress</span>
+                  <span className="font-semibold">{completionPercentage}%</span>
+                </div>
+                <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-white rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${completionPercentage}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Info Banner */}
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 flex gap-3">
+            <div className="p-1.5 bg-amber-100 rounded-lg h-fit">
+              <Info className="w-4 h-4 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-amber-900">
+                Important Information
+              </p>
+              <p className="text-sm text-amber-700 mt-0.5">
+                All fields marked with{" "}
+                <span className="text-rose-500 font-medium">*</span> are
+                mandatory. The admin email will receive login credentials.
+              </p>
             </div>
           </div>
 
