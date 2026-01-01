@@ -234,8 +234,23 @@ const SubFoldersPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div
+      className="
+    w-full
+    h-screen
+    lg:h-[calc(100vh-80px)]
+    overflow-y-auto
+    overflow-x-hidden
+    scroll-smooth
+    bg-gradient-to-br from-gray-50 via-white to-gray-50
+    p-4 sm:p-6 md:p-8
+  "
+      style={{
+        scrollbarWidth: "thin",
+        scrollbarColor: "#cbd5e1 transparent",
+      }}
+    >
+      <div className="px-4 py-4 sm:p-6 max-w-7xl mx-auto space-y-6">
         {/* ==================== BREADCRUMB NAVIGATION ==================== */}
         <div
           className="
@@ -449,7 +464,7 @@ const SubFoldersPage = () => {
 
         {/* Subfolders Grid */}
         {subfolders.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 pb-24">
             {subfolders.map((sf, index) => (
               <div
                 key={sf.id}
@@ -673,6 +688,16 @@ const SubFoldersPage = () => {
             </div>
           </div>
         )}
+
+        {/* 👇 ADD THIS EXACTLY HERE */}
+        <div
+          className="flex justify-center pt-4 pb-16"
+          style={{
+            paddingBottom: "calc(env(safe-area-inset-bottom) + 4rem)",
+          }}
+        >
+          <span className="sr-only">scroll spacer</span>
+        </div>
 
         <CreateFolderModal
           open={showCreate}

@@ -116,37 +116,26 @@ export default function CustomerProfile() {
         }
 
         console.log("Fetching company profile:", companyId);
-        const res = await getCustomer(companyId);
+
+        const response = await getCustomer(companyId);
         if (cancelled) return;
 
-        const res = await getCompanyProfile(companyId);
-        if (cancelled) return;
+        console.log("COMPANY PROFILE RESPONSE:", response.data);
 
-        console.log("COMPANY PROFILE RESPONSE:", res.data);
-
-        const companyData = res.data || {};
-        const adminUser = (companyData.users && companyData.users[0]) || null;
-
-        // ✅ SAFETY GUARD — DEBUG CONTRACT ISSUES
-        if (!Array.isArray(companyData.projects)) {
-          console.error(
-            "Projects missing or invalid in company profile response",
-            companyData
-          );
-        }
+        const companyData = response.data || {};
+        const adminUser = companyData.users?.[0] || null;
 
         setData({
           company: companyData.company || null,
           admin: adminUser,
-          projects: companyData.projects || [],
-          admin: companyData.users?.[0] || null,
           projects: Array.isArray(companyData.projects)
             ? companyData.projects
             : [],
         });
       } catch (err) {
-        if (cancelled) return;
-        console.error("Load company profile error", err);
+        if (!cancelled) {
+          console.error("Load company profile error", err);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
