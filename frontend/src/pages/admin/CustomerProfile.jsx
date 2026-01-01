@@ -62,6 +62,46 @@ export default function CustomerProfile() {
     window.innerWidth >= 1024 ? "calc(100vh - 80px)" : "100dvh"
   );
 
+  // // -------------------------------
+  // // FETCH COMPANY PROFILE
+  // // -------------------------------
+  // useEffect(() => {
+  //   let cancelled = false;
+
+  //   async function load() {
+  //     try {
+  //       if (!isAdminLike) {
+  //         navigate("/projects", { replace: true });
+  //         return;
+  //       }
+
+  //       console.log("Fetching company profile:", companyId);
+  //       const res = await getCompanyProfile(companyId);
+
+  //       console.log("COMPANY PROFILE RESPONSE:", res.data);
+
+  //       const companyData = res.data || {};
+
+  //       setData({
+  //         company: companyData.company || null,
+  //         admin: companyData.users?.[0] || null,
+  //         projects: companyData.projects || [],
+  //       });
+  //     } catch (err) {
+  //       if (cancelled) return;
+  //       console.error("Load company profile error", err);
+  //     } finally {
+  //       if (!cancelled) setLoading(false);
+  //     }
+  //   }
+
+  //   load();
+
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, [companyId, isAdminLike, navigate]);
+
   // -------------------------------
   // FETCH COMPANY PROFILE
   // -------------------------------
@@ -79,13 +119,30 @@ export default function CustomerProfile() {
         const res = await getCustomer(companyId);
         if (cancelled) return;
 
+        const res = await getCompanyProfile(companyId);
+        if (cancelled) return;
+
+        console.log("COMPANY PROFILE RESPONSE:", res.data);
+
         const companyData = res.data || {};
         const adminUser = (companyData.users && companyData.users[0]) || null;
+
+        // ✅ SAFETY GUARD — DEBUG CONTRACT ISSUES
+        if (!Array.isArray(companyData.projects)) {
+          console.error(
+            "Projects missing or invalid in company profile response",
+            companyData
+          );
+        }
 
         setData({
           company: companyData.company || null,
           admin: adminUser,
           projects: companyData.projects || [],
+          admin: companyData.users?.[0] || null,
+          projects: Array.isArray(companyData.projects)
+            ? companyData.projects
+            : [],
         });
       } catch (err) {
         if (cancelled) return;

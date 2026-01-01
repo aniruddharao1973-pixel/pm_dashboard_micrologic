@@ -1,5 +1,4 @@
 /* Base Styles */
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -93,12 +92,10 @@ body {
 }
 
 /* Smooth transitions for all elements */
-* {
-  -webkit-tap-highlight-color: transparent;
+.transition-default {
   transition: background-color 0.3s ease, border-color 0.3s ease,
     color 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.3s ease, box-shadow 0.3s ease;
-  box-sizing: border-box;
 }
 
 /* Fix for initial page load */

@@ -5,7 +5,6 @@ The system supports role-based access (Admin, Tech Sales, Customer), document ma
 
 Project Structure
 pm_dashboard_micrologic/
-<<<<<<< HEAD
 ├── backend/ # Node.js + Express API
 ├── frontend/ # React (Vite) application
 ├── backend/ # Node.js + Express API

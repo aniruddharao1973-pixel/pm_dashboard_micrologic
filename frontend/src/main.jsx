@@ -7,7 +7,6 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import "react-phone-input-2/lib/style.css";
 
-
 // SweetAlert2 global CSS (for clean toasts)
 import "sweetalert2/dist/sweetalert2.min.css";
 
@@ -15,7 +14,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <App />
+        <App/>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

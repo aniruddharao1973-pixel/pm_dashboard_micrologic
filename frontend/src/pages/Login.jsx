@@ -899,7 +899,7 @@ const Login = () => {
               <span className="text-xl font-bold tracking-tight text-slate-800">
                 Micro
                 <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Logic
+                  Sync
                 </span>
               </span>
               <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-semibold mt-1">

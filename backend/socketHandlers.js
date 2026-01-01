@@ -2,6 +2,14 @@
 
 export function registerSocketHandlers(io) {
   io.on("connection", (socket) => {
+    socket.conn.on("upgrade", () => {
+      console.log("⬆ WebSocket upgraded:", socket.id);
+    });
+
+    socket.conn.on("close", (reason) => {
+      console.log("🔌 Socket closed:", reason);
+    });
+
     console.log("🔌 Client connected:", socket.id);
 
     /*
@@ -73,7 +81,6 @@ export function registerSocketHandlers(io) {
         userId,
       });
     });
-
 
     /*
      * DISCONNECT
