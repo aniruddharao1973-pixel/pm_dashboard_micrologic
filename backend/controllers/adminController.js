@@ -769,3 +769,56 @@ export const deleteProject = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+/* ---------------------------------------------------
+   🔍 Validate Duplicate Fields (LIVE CHECK)
+--------------------------------------------------- */
+export const validateDuplicate = async (req, res) => {
+  const { type, value, companyId } = req.body;
+
+  if (!type || !value) {
+    return res.json({ exists: false });
+  }
+
+  try {
+    let result;
+
+    switch (type) {
+      case "email":
+        result = await pool.query(
+          "SELECT id FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1",
+          [value]
+        );
+        break;
+
+      case "companyName":
+        result = await pool.query(
+          "SELECT id FROM companies WHERE LOWER(name) = LOWER($1) LIMIT 1",
+          [value]
+        );
+        break;
+
+      case "externalId":
+        result = await pool.query(
+          "SELECT id FROM companies WHERE external_id = $1 LIMIT 1",
+          [value]
+        );
+        break;
+
+      case "phone":
+        result = await pool.query(
+          "SELECT id FROM companies WHERE contact_phone = $1 LIMIT 1",
+          [value]
+        );
+        break;
+
+      default:
+        return res.json({ exists: false });
+    }
+
+    return res.json({ exists: result.rows.length > 0 });
+  } catch (err) {
+    console.error("validateDuplicate error:", err);
+    return res.status(500).json({ exists: false });
+  }
+};

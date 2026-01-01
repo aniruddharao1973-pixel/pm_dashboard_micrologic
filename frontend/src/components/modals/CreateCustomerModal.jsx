@@ -557,11 +557,25 @@ export default function CreateCustomerModal({ open, onClose, onSuccess }) {
 
                           locationAbortRef.current = new AbortController();
 
+                          // const res = await fetch(
+                          //   `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+                          //     value
+                          //   )}&format=json&limit=5&accept-language=en&addressdetails=0&countrycodes=in&bounded=1`,
+                          //   { signal: locationAbortRef.current.signal }
+                          // );
+
                           const res = await fetch(
                             `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
                               value
                             )}&format=json&limit=5&accept-language=en&addressdetails=0&countrycodes=in&bounded=1`,
-                            { signal: locationAbortRef.current.signal }
+                            {
+                              signal: locationAbortRef.current.signal,
+                              headers: {
+                                Accept: "application/json",
+                                "User-Agent":
+                                  "PM-Dashboard/1.0 (https://facteyes.com)",
+                              },
+                            }
                           );
 
                           const data = await res.json();

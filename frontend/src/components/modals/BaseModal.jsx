@@ -133,7 +133,7 @@ export default function BaseModal({
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes animate-in {
           from {
             opacity: 0;
