@@ -15,7 +15,7 @@ import VersionsModal from "../components/modals/VersionsModal";
 import RenameModal from "../components/modals/RenameModal";
 import DeleteConfirmModal from "../components/modals/DeleteConfirmModal";
 import NotesModal from "../components/modals/NotesModal";
-import Breadcrumb from "../components/Breadcrumb";
+import { useBreadcrumb } from "../context/BreadcrumbContext";
 
 import { useProjectsApi } from "../api/projectsApi";
 import { useAdminApi } from "../api/adminApi";
@@ -58,8 +58,10 @@ const DocumentsPage = () => {
   const [subfolders, setSubfolders] = useState([]);
 
   // ⭐ Breadcrumb states
+  // ⭐ Breadcrumb states
   const [projectName, setProjectName] = useState("");
   const [customerName, setCustomerName] = useState("");
+  const [companyId, setCompanyId] = useState(null);
 
   // Build full folder path hierarchy (parent → child)
   const [folderChain, setFolderChain] = useState([]);
@@ -124,34 +126,60 @@ const DocumentsPage = () => {
   const [versionsFile, setVersionsFile] = useState(null);
   const [versionList, setVersionList] = useState([]);
   const [notesFile, setNotesFile] = useState(null);
+  const { setBreadcrumb } = useBreadcrumb();
 
-  // ⭐ Load breadcrumb (project + customer + folder name)
-  const loadBreadcrumbData = async () => {
+  // ==============================
+  // Load Project + Customer
+  // ==============================
+  const loadProjectAndCustomer = async () => {
     try {
-      // Load project info
       const pRes = await getProjectById(projectId);
       const project = pRes.data;
-      setProjectName(project.name);
 
-      // Load customer name based on role
+      setProjectName(project.name);
+      setCompanyId(project.company_id);
+
       if (
-        user.role === "admin" ||
-        (user.role === "techsales" && project.company_id)
+        (user.role === "admin" || user.role === "techsales") &&
+        project.company_id
       ) {
         const cRes = await getCustomer(project.company_id);
-        if (cRes.data?.customer) {
-          setCustomerName(cRes.data.customer.name);
+        if (cRes.data?.company) {
+          setCustomerName(cRes.data.company.name);
         }
-      } else {
-        // customer login → use their own name
-        setCustomerName(user.name);
       }
-
-      // Folder name if provided by API
     } catch (err) {
-      console.error("Breadcrumb Load Error:", err);
+      console.error("Project/Customer load error:", err);
     }
   };
+
+  // ⭐ Load breadcrumb (project + customer + folder name)
+  // const loadBreadcrumbData = async () => {
+  //   try {
+  //     // Load project info
+  //     const pRes = await getProjectById(projectId);
+  //     const project = pRes.data;
+  //     setProjectName(project.name);
+
+  //     // Load customer name based on role
+  //     if (
+  //       user.role === "admin" ||
+  //       (user.role === "techsales" && project.company_id)
+  //     ) {
+  //       const cRes = await getCustomer(project.company_id);
+  //       if (cRes.data?.customer) {
+  //         setCustomerName(cRes.data.customer.name);
+  //       }
+  //     } else {
+  //       // customer login → use their own name
+  //       setCustomerName(user.name);
+  //     }
+
+  //     // Folder name if provided by API
+  //   } catch (err) {
+  //     console.error("Breadcrumb Load Error:", err);
+  //   }
+  // };
 
   // 📂 Load docs + subfolders
   const loadData = async () => {
@@ -187,9 +215,55 @@ const DocumentsPage = () => {
 
   // 🔄 Load breadcrumb *after* documents load
   useEffect(() => {
-    loadBreadcrumbData();
     loadFolderHierarchy();
-  }, [safeFolderId]);
+    loadProjectAndCustomer();
+  }, [safeFolderId, projectId]);
+
+  // ==============================
+  // SET GLOBAL BREADCRUMB
+  // ==============================
+  useEffect(() => {
+    if (!projectName) return;
+
+    const crumbs = [{ label: "Projects", to: "/projects" }];
+
+    // Admin / Techsales → Customer
+    if (
+      (user.role === "admin" || user.role === "techsales") &&
+      customerName &&
+      companyId
+    ) {
+      crumbs.push({
+        label: customerName,
+        to: `/admin/company/${companyId}`,
+      });
+    }
+
+    // Project → Folders
+    crumbs.push({
+      label: projectName,
+      to: `/projects/${projectId}/folders`,
+    });
+
+    // Folders page label (explicit)
+    // crumbs.push({
+    //   label: "Customer Documents",
+    //   to: `/projects/${projectId}/folders`,
+    // });
+
+    // Folder chain
+    folderChain.forEach((f, idx) => {
+      crumbs.push({
+        label: f.name,
+        to:
+          idx === folderChain.length - 1
+            ? undefined // ACTIVE (documents page)
+            : `/projects/${projectId}/folders/${f.id}`,
+      });
+    });
+
+    setBreadcrumb(crumbs);
+  }, [projectName, customerName, folderChain, projectId, user.role]);
 
   const scrollRef = React.useRef(null);
 
@@ -309,7 +383,7 @@ const DocumentsPage = () => {
 
   return (
     // <div className="space-y-2 px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 pt-1 sm:pt-2">
-    <div className="space-y-2 px-2 sm:px-3 pt-1">
+    <div className="space-y-2 px-2 sm:px-3 pt-1 w-full">
       {/* HEADER — Fully Responsive */}
       <div
         className="
@@ -477,47 +551,94 @@ const DocumentsPage = () => {
           </div>
         )}
       </div>
+=======
+>>>>>>> a8df9fa (updated frontend and backend v21)
 
       {/* DOCUMENTS SECTION - Fully Responsive */}
       <div
         className="
-        bg-white 
-        rounded-lg sm:rounded-xl md:rounded-2xl 
-        border border-gray-200 shadow-sm overflow-hidden
-      "
+    bg-white 
+    rounded-lg sm:rounded-xl md:rounded-2xl 
+    border border-gray-200 shadow-sm
+    overflow-hidden
+    w-full
+    flex flex-col
+    h-[calc(100vh-120px)] sm:h-[calc(100vh-160px)]
+  "
       >
         {/* Header Bar */}
         <div
           className="
-          bg-gradient-to-r from-gray-50 to-slate-50 
-          px-3 sm:px-4 md:px-5 lg:px-6 
-          py-2.5 sm:py-3 md:py-4 
-          border-b border-gray-200
-        "
+    bg-gradient-to-r from-slate-50 via-white to-slate-50
+    px-3 sm:px-4 md:px-6 lg:px-8
+    py-3 sm:py-4 md:py-5
+    border-b border-gray-200
+  "
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            {/* LEFT: ICON + TITLE */}
+            <div className="flex items-center gap-3 sm:gap-4">
               <div
                 className="
-                w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 lg:w-10 lg:h-10 
-                rounded-md sm:rounded-lg md:rounded-xl 
-                bg-gradient-to-br from-blue-500 to-purple-500 
-                flex items-center justify-center shadow-md
-              "
+          w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11
+          rounded-lg md:rounded-xl
+          bg-gradient-to-br from-indigo-500 via-purple-500 to-violet-500
+          flex items-center justify-center
+          shadow-lg
+        "
               >
-                <span className="text-white text-sm sm:text-base md:text-lg">
+                <span className="text-white text-base sm:text-lg md:text-xl">
                   📄
                 </span>
               </div>
-              <div>
-                <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-800">
+
+              <div className="leading-tight">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">
                   Documents
                 </h2>
-                <p className="text-xs text-gray-500 font-medium">
+                <p className="text-xs sm:text-sm text-gray-500 font-medium">
                   {documents.length} files available
                 </p>
               </div>
             </div>
+
+            {/* RIGHT: UPLOAD ACTION */}
+            {canCustomerUpload ? (
+              <button
+                onClick={() => setUploadOpen(true)}
+                className="
+  w-full sm:w-auto
+  inline-flex items-center justify-center gap-2 sm:gap-2.5
+  px-4 sm:px-4 md:px-5
+  py-2.5
+  text-sm sm:text-base font-semibold
+  text-white
+  bg-gradient-to-r from-green-500 via-emerald-500 to-green-600
+  rounded-lg md:rounded-xl
+  shadow-md hover:shadow-lg
+  transition-all
+"
+              >
+                <span className="text-lg leading-none">＋</span>
+                <span className="hidden sm:inline">Upload Document</span>
+                <span className="sm:hidden">Upload</span>
+              </button>
+            ) : (
+              <div
+                className="
+          inline-flex items-center gap-2
+          px-3 py-2
+          text-xs sm:text-sm font-semibold
+          text-red-700
+          bg-red-50 border border-red-200
+          rounded-lg
+          cursor-not-allowed
+        "
+                title="Upload not allowed in this folder"
+              >
+                🚫 Disabled
+              </div>
+            )}
           </div>
         </div>
 
@@ -525,15 +646,18 @@ const DocumentsPage = () => {
         <div
           ref={scrollRef}
           className="
-            overflow-y-auto
-            max-h-[calc(100vh-250px)] sm:max-h-[calc(80vh-180px)]
-            p-2 sm:p-4
-            mt-2 sm:mt-4
-            scroll-appear
-          "
+    flex-1
+    overflow-y-auto
+    overflow-x-hidden
+    p-2 sm:p-4
+    pb-6 sm:pb-8
+    scroll-appear
+  "
           style={{
             scrollbarWidth: "thin",
             scrollbarColor: "#cbd5e1 #f1f5f9",
+            WebkitOverflowScrolling: "touch",
+            touchAction: "pan-y",
           }}
         >
           {/* Empty State */}
@@ -564,7 +688,7 @@ const DocumentsPage = () => {
           ) : (
             /* Document Grid - Fully Responsive */
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 w-full max-w-full">
               {documents.map((doc) => (
                 <div
                   key={doc.id}

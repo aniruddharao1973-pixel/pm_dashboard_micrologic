@@ -6,7 +6,8 @@ import { useAuth } from "../../hooks/useAuth";
 import CreateProjectModal from "../../components/modals/CreateProjectModal";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
-import Breadcrumb from "../../components/Breadcrumb";
+import { useBreadcrumb } from "../../context/BreadcrumbContext";
+
 import {
   Building2,
   User,
@@ -57,6 +58,7 @@ export default function CustomerProfile() {
 
   const navigate = useNavigate();
   const { isAdminLike } = useAuth();
+  const { setBreadcrumb } = useBreadcrumb();
 
   const [containerHeight, setContainerHeight] = useState(
     window.innerWidth >= 1024 ? "calc(100vh - 80px)" : "100dvh"
@@ -125,6 +127,14 @@ export default function CustomerProfile() {
         const companyData = response.data || {};
         const adminUser = companyData.users?.[0] || null;
 
+        // ⭐ SET GLOBAL BREADCRUMB HERE
+        // ⭐ SET GLOBAL BREADCRUMB HERE
+        setBreadcrumb([
+          { label: "Customers", to: "/admin/customers" },
+          { label: companyData.company?.name || "Customer" },
+        ]);
+
+        // ⭐ SET PAGE DATA
         setData({
           company: companyData.company || null,
           admin: adminUser,
@@ -146,7 +156,7 @@ export default function CustomerProfile() {
     return () => {
       cancelled = true;
     };
-  }, [companyId, isAdminLike, navigate]);
+  }, [companyId, isAdminLike, navigate, setBreadcrumb]);
 
   useEffect(() => {
     const updateHeight = () => {
@@ -325,7 +335,7 @@ export default function CustomerProfile() {
     >
       <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
         {/* Breadcrumb */}
-        <Breadcrumb
+        {/* <Breadcrumb
           items={[
             {
               label: "Dashboard",
@@ -340,6 +350,9 @@ export default function CustomerProfile() {
             },
           ]}
         />
+
+
+        /> */}
 
         <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
           {/* ==================== HERO SECTION ==================== */}
